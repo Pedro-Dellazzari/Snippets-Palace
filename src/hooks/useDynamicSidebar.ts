@@ -153,10 +153,7 @@ function buildProjectHierarchy(projects: ProjectItem[], folders: Folder[], count
       isCreating: true
     })
   } else if (creatingInParent && projects.some(p => p.id === creatingInParent)) {
-    // Creating folder within a project
-    console.log('🔍 useDynamicSidebar: Creating folder in project:', { creatingInParent, projects: projects.map(p => p.id) })
     const parentProject = projectMap.get(creatingInParent)
-    console.log('🔍 parentProject found:', !!parentProject)
     if (parentProject) {
       parentProject.children = parentProject.children || []
       parentProject.children.push({
@@ -166,7 +163,6 @@ function buildProjectHierarchy(projects: ProjectItem[], folders: Folder[], count
         type: 'folder' as const,
         isCreating: true
       })
-      console.log('🔍 Added creating-folder to project children')
     }
   } else if (creatingInParent && folderMap.has(creatingInParent)) {
     // Creating subfolder within a folder that's inside a project
@@ -196,14 +192,10 @@ export function useDynamicSidebar(): SidebarSection[] {
 
   return useMemo(() => {
     const counts = getSnippetCounts()
-    
-    // Obter linguagens únicas dos snippets (baseado no campo language)
-    const uniqueLanguages = Array.from(new Set(
-      snippets
-        .map(s => s.language)
-        .filter(language => language && language.trim() !== '')
-    )).sort((a, b) => {
-      // Ordenar por quantidade de snippets (decrescente), depois alfabeticamente
+
+    // languageCounts already contains every unique non-empty language seen in
+    // the snippet list — avoid an extra O(n) pass over `snippets`.
+    const uniqueLanguages = Object.keys(counts.languageCounts).sort((a, b) => {
       const countA = counts.languageCounts[a] || 0
       const countB = counts.languageCounts[b] || 0
       if (countA !== countB) return countB - countA
