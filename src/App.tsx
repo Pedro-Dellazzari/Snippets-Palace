@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useStore } from './store/useStore'
-import { OnboardingProvider } from './contexts/OnboardingContext'
+import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext'
 import Sidebar from './components/Sidebar'
 import SnippetList from './components/SnippetList'
 import SnippetDetail from './components/SnippetDetail'
 import SearchBar from './components/SearchBar'
-import OnboardingTour from './components/OnboardingTour'
-import SettingsPage from './components/SettingsPage'
+
+// Joyride is heavy (~300KB) and only needed during the tutorial. Defer its
+// download until the onboarding actually starts.
+const OnboardingTour = lazy(() => import('./components/OnboardingTour'))
 
 function AppContent() {
   const loadPersistedData = useStore(state => state.loadPersistedData)
-  const [showSettings, setShowSettings] = useState(false)
+  const { isOnboardingActive, isShowingDoubleClickTip } = useOnboarding()
 
   useEffect(() => {
     loadPersistedData()
@@ -26,9 +28,11 @@ function AppContent() {
         <SnippetDetail />
       </div>
 
-      <OnboardingTour />
-
-      {showSettings && <SettingsPage onClose={() => setShowSettings(false)} />}
+      {(isOnboardingActive || isShowingDoubleClickTip) && (
+        <Suspense fallback={null}>
+          <OnboardingTour />
+        </Suspense>
+      )}
     </div>
   )
 }

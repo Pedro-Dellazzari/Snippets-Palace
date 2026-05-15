@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { memo, useState, useRef, useEffect } from 'react'
 import { SidebarItem as SidebarItemType } from '../types/sidebar'
 import { useStore } from '../store/useStore'
 import { useInlineCreation } from '../hooks/useInlineCreation'
@@ -23,8 +23,19 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onSelect,
   onToggle
 }) => {
-  const { setSelectedFolder, setSelectedProject, setSelectedItem, updateFolder, updateProjectItem, addFolder, addProjectItem } = useStore()
-  const { startCreatingFolder, startCreatingProject, cancelCreation, finishCreation } = useInlineCreation()
+  // Granular selectors — these are all stable action references, so a single
+  // subscription per slice avoids re-renders on unrelated state changes.
+  const setSelectedFolder = useStore(state => state.setSelectedFolder)
+  const setSelectedProject = useStore(state => state.setSelectedProject)
+  const setSelectedItem = useStore(state => state.setSelectedItem)
+  const updateFolder = useStore(state => state.updateFolder)
+  const updateProjectItem = useStore(state => state.updateProjectItem)
+  const addFolder = useStore(state => state.addFolder)
+  const addProjectItem = useStore(state => state.addProjectItem)
+  const startCreatingFolder = useInlineCreation(state => state.startCreatingFolder)
+  const startCreatingProject = useInlineCreation(state => state.startCreatingProject)
+  const cancelCreation = useInlineCreation(state => state.cancelCreation)
+  const finishCreation = useInlineCreation(state => state.finishCreation)
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(item.label)
   const [contextMenu, setContextMenu] = useState<{
@@ -100,11 +111,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   }
 
   const handleCreateSubfolder = (parentId: string) => {
-    console.log('🔍 handleCreateSubfolder called:', { parentId })
     const realParentId = parentId.startsWith('folder-') ? parentId.replace('folder-', '') : parentId.replace('project-', '')
-    console.log('🔍 realParentId:', realParentId)
     startCreatingFolder(realParentId)
-    console.log('🔍 startCreatingFolder called with:', realParentId)
   }
 
   const handleCreateSubproject = () => {
@@ -405,4 +413,4 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   )
 }
 
-export default SidebarItem
+export default memo(SidebarItem)

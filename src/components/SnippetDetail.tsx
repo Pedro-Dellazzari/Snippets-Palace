@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, lazy, Suspense } from 'react'
 import { useStore } from '../store/useStore'
-import { 
+import {
   ClipboardDocumentIcon,
   HeartIcon,
   PencilIcon,
@@ -9,22 +9,24 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid, CheckIcon } from '@heroicons/react/24/solid'
-import Editor from '@monaco-editor/react'
 import clsx from 'clsx'
+
+// Lazy-load Monaco (~3-5MB) so initial app paint is dramatically lighter.
+const Editor = lazy(() => import('@monaco-editor/react'))
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getLanguageColor, getTagColor, getLightColor } from '../utils/colors'
 import Tooltip from './Tooltip'
 
 const SnippetDetail: React.FC = () => {
-  const {
-    selectedSnippet,
-    toggleFavorite,
-    incrementUsageCount,
-    updateSnippet,
-    deleteSnippet,
-    projectItems
-  } = useStore()
+  // Granular selectors keep this component out of the re-render path for
+  // unrelated state changes (folders, sidebar tabs, search results, etc.).
+  const selectedSnippet = useStore(state => state.selectedSnippet)
+  const toggleFavorite = useStore(state => state.toggleFavorite)
+  const incrementUsageCount = useStore(state => state.incrementUsageCount)
+  const updateSnippet = useStore(state => state.updateSnippet)
+  const deleteSnippet = useStore(state => state.deleteSnippet)
+  const projectItems = useStore(state => state.projectItems)
 
   const [copied, setCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -401,37 +403,39 @@ const SnippetDetail: React.FC = () => {
             ? 'border-red-300 dark:border-red-700' 
             : 'border-gray-200 dark:border-gray-700'
         }`}>
-          <Editor
-            height="100%"
-            language={getLanguageForEditor(isEditing ? editForm.language : selectedSnippet.language)}
-            value={isEditing ? editForm.content : selectedSnippet.content}
-            onChange={(value) => isEditing && handleFormChange('content', value || '')}
-            theme="vs"
-            options={{
-              readOnly: !isEditing,
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              lineNumbers: 'on',
-              folding: false,
-              glyphMargin: false,
-              lineDecorationsWidth: 10,
-              lineNumbersMinChars: 3,
-              fontSize: 14,
-              fontFamily: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
-              padding: { top: 16, bottom: 16 },
-              smoothScrolling: true,
-              cursorBlinking: 'smooth',
-              renderLineHighlight: 'none',
-              selectionHighlight: false,
-              occurrencesHighlight: "off"
-            }}
-            loading={
-              <div className="flex items-center justify-center h-full text-gray-500">
-                Carregando editor...
-              </div>
-            }
-          />
+          <Suspense fallback={<div className="flex items-center justify-center h-full text-gray-500">Carregando editor...</div>}>
+            <Editor
+              height="100%"
+              language={getLanguageForEditor(isEditing ? editForm.language : selectedSnippet.language)}
+              value={isEditing ? editForm.content : selectedSnippet.content}
+              onChange={(value) => isEditing && handleFormChange('content', value || '')}
+              theme="vs"
+              options={{
+                readOnly: !isEditing,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                folding: false,
+                glyphMargin: false,
+                lineDecorationsWidth: 10,
+                lineNumbersMinChars: 3,
+                fontSize: 14,
+                fontFamily: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+                padding: { top: 16, bottom: 16 },
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                renderLineHighlight: 'none',
+                selectionHighlight: false,
+                occurrencesHighlight: "off"
+              }}
+              loading={
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Carregando editor...
+                </div>
+              }
+            />
+          </Suspense>
         </div>
       </div>
 

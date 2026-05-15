@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { SidebarSection as SidebarSectionType } from '../types/sidebar'
 import SidebarItem from './SidebarItem'
 import SidebarIcon from './SidebarIcon'
@@ -86,4 +86,4 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({
   )
 }
 
-export default SidebarSection
+export default memo(SidebarSection)

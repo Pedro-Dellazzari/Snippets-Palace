@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
   SETTINGS: 'snippets-app-settings'
 }
 
+const WRITE_DEBOUNCE_MS = 250
+
 export interface StorageData {
   snippets: Snippet[]
   categories: Category[]
@@ -20,36 +22,67 @@ export interface StorageData {
 }
 
 class Storage {
-  private isSupported(): boolean {
+  private supported: boolean
+  private pending = new Map<string, unknown>()
+  private timer: ReturnType<typeof setTimeout> | null = null
+
+  constructor() {
+    this.supported = this.checkSupport()
+    if (this.supported && typeof window !== 'undefined') {
+      // Flush pending writes before unload so we never lose data
+      window.addEventListener('beforeunload', () => this.flush())
+      window.addEventListener('pagehide', () => this.flush())
+    }
+  }
+
+  private checkSupport(): boolean {
     try {
       if (typeof localStorage === 'undefined') return false
-      localStorage.setItem('test', 'test')
-      localStorage.removeItem('test')
+      const probe = '__snippet_probe__'
+      localStorage.setItem(probe, '1')
+      localStorage.removeItem(probe)
       return true
     } catch {
       return false
     }
   }
 
-  private saveToStorage<T>(key: string, data: T): boolean {
-    if (!this.isSupported()) return false
-    
-    try {
-      localStorage.setItem(key, JSON.stringify(data))
-      return true
-    } catch (error) {
-      console.error(`Error saving to localStorage: ${key}`, error)
-      return false
+  private scheduleWrite(): void {
+    if (this.timer) return
+    this.timer = setTimeout(() => this.flush(), WRITE_DEBOUNCE_MS)
+  }
+
+  flush(): void {
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = null
     }
+    if (!this.supported || this.pending.size === 0) return
+
+    for (const [key, value] of this.pending) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value))
+      } catch (error) {
+        console.error(`Error saving to localStorage: ${key}`, error)
+      }
+    }
+    this.pending.clear()
+  }
+
+  private saveToStorage<T>(key: string, data: T): boolean {
+    if (!this.supported) return false
+    this.pending.set(key, data)
+    this.scheduleWrite()
+    return true
   }
 
   private loadFromStorage<T>(key: string, defaultValue: T): T {
-    if (!this.isSupported()) return defaultValue
-    
+    if (!this.supported) return defaultValue
+
     try {
       const stored = localStorage.getItem(key)
       if (!stored) return defaultValue
-      
+
       return JSON.parse(stored)
     } catch (error) {
       console.error(`Error loading from localStorage: ${key}`, error)
@@ -123,25 +156,28 @@ class Storage {
     }
   }
 
-  // Save all data
+  // Save all data (flush immediately for explicit bulk save)
   saveAllData(data: StorageData): boolean {
-    const results = [
-      this.saveSnippets(data.snippets),
-      this.saveCategories(data.categories),
-      this.saveProjects(data.projects),
-      this.saveTags(data.tags),
-      this.saveFolders(data.folders),
-      this.saveProjectItems(data.projectItems)
-    ]
-    
-    return results.every(result => result)
+    this.saveSnippets(data.snippets)
+    this.saveCategories(data.categories)
+    this.saveProjects(data.projects)
+    this.saveTags(data.tags)
+    this.saveFolders(data.folders)
+    this.saveProjectItems(data.projectItems)
+    this.flush()
+    return true
   }
 
   // Clear all data
   clearAllData(): boolean {
-    if (!this.isSupported()) return false
-    
+    if (!this.supported) return false
+
     try {
+      this.pending.clear()
+      if (this.timer) {
+        clearTimeout(this.timer)
+        this.timer = null
+      }
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key)
       })
