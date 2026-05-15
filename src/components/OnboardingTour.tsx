@@ -18,42 +18,30 @@ const OnboardingTour: React.FC = () => {
   const handleJoyrideCallback = useCallback((data: CallBackProps) => {
     const { status, type, action, index } = data
 
-    console.log('Joyride callback:', { status, type, action, index, stepsLength: steps.length })
-
-    // Se finalizou ou pulou o tutorial, fechar
     if (status === 'finished' || status === 'skipped') {
-      console.log('Finalizando onboarding')
       skipOnboarding()
       return
     }
 
-    // Se clicou em fechar (X)
     if (action === ACTIONS.CLOSE) {
-      console.log('Fechando onboarding')
       skipOnboarding()
       return
     }
 
-    // Navegação entre etapas - verifica ANTES de verificar se é a última
     if (type === 'step:after') {
       if (action === ACTIONS.NEXT && index < steps.length - 1) {
-        console.log('Avançando para próximo step')
         nextStep()
         return
       } else if (action === ACTIONS.PREV && index > 0) {
-        console.log('Voltando para step anterior')
         previousStep()
         return
       } else if (action === ACTIONS.NEXT && index === steps.length - 1) {
-        console.log('Última etapa, finalizando')
         skipOnboarding()
         return
       }
     }
 
-    // Handle target not found - skip to next step
     if (type === 'error:target_not_found') {
-      console.warn(`Tutorial target not found for step ${index}:`, steps[index]?.target)
       if (index < steps.length - 1) {
         nextStep()
       } else {

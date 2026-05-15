@@ -3,6 +3,22 @@ import { Snippet, AppState, Folder, ProjectItem } from '../types'
 import Fuse from 'fuse.js'
 import { storage } from '../utils/storage'
 
+interface SnippetCounts {
+  totalSnippets: number
+  categoryCounts: Record<string, number>
+  projectCounts: Record<string, number>
+  tagCounts: Record<string, number>
+  languageCounts: Record<string, number>
+  folderCounts: Record<string, number>
+  projectItemCounts: Record<string, number>
+  untagged: number
+  uncategorized: number
+  recentlyModified: number
+  favorites: number
+  unassigned: number
+  mostUsed: number
+}
+
 interface StoreActions {
   setSnippets: (snippets: Snippet[]) => void
   addSnippet: (snippet: Snippet) => void
@@ -20,21 +36,7 @@ interface StoreActions {
   importData: (jsonData: string) => boolean
   moveSnippetToFolder: (snippetId: string, folderId: string | null) => void
   moveSnippetToProject: (snippetId: string, projectId: string | null) => void
-  getSnippetCounts: () => {
-    totalSnippets: number
-    categoryCounts: Record<string, number>
-    projectCounts: Record<string, number>
-    tagCounts: Record<string, number>
-    languageCounts: Record<string, number>
-    folderCounts: Record<string, number>
-    projectItemCounts: Record<string, number>
-    untagged: number
-    uncategorized: number
-    recentlyModified: number
-    favorites: number
-    unassigned: number
-    mostUsed: number
-  }
+  getSnippetCounts: () => SnippetCounts
   // Folders
   addFolder: (name: string, parentId?: string) => void
   updateFolder: (id: string, updates: Partial<Folder>) => void
@@ -73,40 +75,119 @@ const initialState: AppState = {
   error: null
 }
 
+// ---- Fuse index cache (rebuild only when snippets array reference changes) ----
+let cachedFuse: Fuse<Snippet> | null = null
+let cachedFuseRef: Snippet[] | null = null
+function getFuse(snippets: Snippet[]): Fuse<Snippet> {
+  if (cachedFuse && cachedFuseRef === snippets) return cachedFuse
+  cachedFuse = new Fuse(snippets, {
+    keys: [
+      { name: 'title', weight: 0.4 },
+      { name: 'description', weight: 0.3 },
+      { name: 'content', weight: 0.2 },
+      { name: 'tags', weight: 0.1 }
+    ],
+    includeScore: true,
+    includeMatches: true,
+    threshold: 0.4
+  })
+  cachedFuseRef = snippets
+  return cachedFuse
+}
+
+// ---- SnippetCounts cache (rebuild only when source arrays change) ----
+let cachedCounts: SnippetCounts | null = null
+let cachedCountsSnippetsRef: Snippet[] | null = null
+function computeCounts(snippets: Snippet[]): SnippetCounts {
+  if (cachedCounts && cachedCountsSnippetsRef === snippets) return cachedCounts
+
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+
+  const categoryCounts: Record<string, number> = {}
+  const folderCounts: Record<string, number> = {}
+  const projectItemCounts: Record<string, number> = {}
+  const tagCounts: Record<string, number> = {}
+  const languageCounts: Record<string, number> = {}
+
+  let untagged = 0
+  let uncategorized = 0
+  let recentlyModified = 0
+  let favorites = 0
+  let unassigned = 0
+  let mostUsed = 0
+
+  for (const s of snippets) {
+    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1
+    else uncategorized++
+
+    if (s.folderId) folderCounts[s.folderId] = (folderCounts[s.folderId] || 0) + 1
+    if (s.projectId) projectItemCounts[s.projectId] = (projectItemCounts[s.projectId] || 0) + 1
+
+    if (s.tags && s.tags.length > 0) {
+      for (const t of s.tags) tagCounts[t] = (tagCounts[t] || 0) + 1
+    } else {
+      untagged++
+    }
+
+    if (s.language) languageCounts[s.language] = (languageCounts[s.language] || 0) + 1
+    if (s.favorite) favorites++
+    if (!s.folderId && !s.projectId) unassigned++
+    if (s.usage_count > 0) mostUsed++
+    if (s.updatedAt && new Date(s.updatedAt).getTime() >= sevenDaysAgo) recentlyModified++
+  }
+
+  cachedCounts = {
+    totalSnippets: snippets.length,
+    categoryCounts,
+    projectCounts: {},
+    tagCounts,
+    languageCounts,
+    folderCounts,
+    projectItemCounts,
+    untagged,
+    uncategorized,
+    recentlyModified,
+    favorites,
+    unassigned,
+    mostUsed
+  }
+  cachedCountsSnippetsRef = snippets
+  return cachedCounts
+}
+
 
 export const useStore = create<AppState & StoreActions>((set, get) => ({
   ...initialState,
-  
+
   setSnippets: (snippets) => {
     set({ snippets })
     storage.saveSnippets(snippets)
   },
-  
+
   addSnippet: (snippet) => {
     const newSnippets = [...get().snippets, snippet]
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
   },
-  
+
   updateSnippet: (id, updates) => {
     const state = get()
     const newSnippets = state.snippets.map(snippet =>
       snippet.id === id ? { ...snippet, ...updates, updatedAt: new Date().toISOString() } : snippet
     )
-    set({ snippets: newSnippets })
-    storage.saveSnippets(newSnippets)
-    
-    // Auto refresh current view if needed
-    const updatedSnippet = newSnippets.find(s => s.id === id)
-    if (updatedSnippet && state.selectedSnippet?.id === id) {
-      set({ selectedSnippet: updatedSnippet })
+    const patch: Partial<AppState> = { snippets: newSnippets }
+    if (state.selectedSnippet?.id === id) {
+      const updated = newSnippets.find(s => s.id === id)
+      if (updated) patch.selectedSnippet = updated
     }
+    set(patch)
+    storage.saveSnippets(newSnippets)
   },
-  
+
   deleteSnippet: (id) => {
     const state = get()
     const newSnippets = state.snippets.filter(snippet => snippet.id !== id)
-    set({ 
+    set({
       snippets: newSnippets,
       selectedSnippet: state.selectedSnippet?.id === id ? null : state.selectedSnippet
     })
@@ -116,9 +197,9 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   duplicateSnippet: (id) => {
     const state = get()
     const originalSnippet = state.snippets.find(snippet => snippet.id === id)
-    
+
     if (!originalSnippet) return null
-    
+
     const duplicatedSnippet: Snippet = {
       ...originalSnippet,
       id: crypto.randomUUID(),
@@ -129,16 +210,16 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newSnippets = [...state.snippets, duplicatedSnippet]
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
-    
+
     return duplicatedSnippet
   },
-  
+
   setSelectedSnippet: (snippet) => set({ selectedSnippet: snippet }),
-  
+
   setSearchQuery: (query) => {
     set({ searchQuery: query })
     if (query.trim()) {
@@ -147,23 +228,23 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       set({ searchResults: [] })
     }
   },
-  
+
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
-  
+
   incrementUsageCount: (id) => {
     const newSnippets = get().snippets.map(snippet =>
-      snippet.id === id 
-        ? { 
-            ...snippet, 
+      snippet.id === id
+        ? {
+            ...snippet,
             usage_count: snippet.usage_count + 1,
             lastUsed: new Date().toISOString()
-          } 
+          }
         : snippet
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
   },
-  
+
   toggleFavorite: (id) => {
     const newSnippets = get().snippets.map(snippet =>
       snippet.id === id ? { ...snippet, favorite: !snippet.favorite } : snippet
@@ -171,21 +252,11 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
   },
-  
+
   searchSnippets: (query) => {
     const { snippets } = get()
-    const fuse = new Fuse(snippets, {
-      keys: [
-        { name: 'title', weight: 0.4 },
-        { name: 'description', weight: 0.3 },
-        { name: 'content', weight: 0.2 },
-        { name: 'tags', weight: 0.1 }
-      ],
-      includeScore: true,
-      includeMatches: true,
-      threshold: 0.4
-    })
-    
+    const fuse = getFuse(snippets)
+
     const results = fuse.search(query).map(result => ({
       snippet: result.item,
       score: result.score || 0,
@@ -194,10 +265,10 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         indices: Array.from(match.indices || []) as number[][]
       }))
     }))
-    
+
     set({ searchResults: results })
   },
-  
+
   loadPersistedData: () => {
     const data = storage.loadAllData()
     set({
@@ -209,11 +280,11 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       projectItems: data.projectItems,
       selectedSnippet: data.snippets.length > 0 ? data.snippets[0] : null
     })
-    
-    // Clean up orphaned data after loading
+
+    // Defer cleanup so initial paint isn't blocked
     setTimeout(() => {
       get().cleanupOrphanedData()
-    }, 100)
+    }, 250)
   },
 
   exportData: () => {
@@ -225,7 +296,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     try {
       const data = JSON.parse(jsonData)
       if (!data.snippets || !Array.isArray(data.snippets)) return false
-      
+
       const validData = {
         snippets: data.snippets || [],
         categories: data.categories || [],
@@ -234,7 +305,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         folders: data.folders || [],
         projectItems: data.projectItems || []
       }
-      
+
       storage.saveAllData(validData)
       set({
         snippets: validData.snippets,
@@ -244,7 +315,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         folders: validData.folders,
         projectItems: validData.projectItems
       })
-      
+
       return true
     } catch (error) {
       console.error('Error importing data:', error)
@@ -252,92 +323,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     }
   },
 
-  getSnippetCounts: () => {
-    const { snippets } = get()
-    const now = new Date()
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    
-    // Contadores de categorias
-    const categoryCounts: Record<string, number> = {}
-    snippets.forEach(snippet => {
-      if (snippet.category) {
-        categoryCounts[snippet.category] = (categoryCounts[snippet.category] || 0) + 1
-      }
-    })
-    
-    // Contadores de projetos (legacy - mantido por compatibilidade)
-    const projectCounts: Record<string, number> = {}
-    
-    // Contadores de folders
-    const folderCounts: Record<string, number> = {}
-    snippets.forEach(snippet => {
-      if (snippet.folderId) {
-        folderCounts[snippet.folderId] = (folderCounts[snippet.folderId] || 0) + 1
-      }
-    })
-    
-    // Contadores de project items
-    const projectItemCounts: Record<string, number> = {}
-    snippets.forEach(snippet => {
-      if (snippet.projectId) {
-        projectItemCounts[snippet.projectId] = (projectItemCounts[snippet.projectId] || 0) + 1
-      }
-    })
-    
-    // Contadores de tags
-    const tagCounts: Record<string, number> = {}
-    snippets.forEach(snippet => {
-      snippet.tags?.forEach(tag => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1
-      })
-    })
-
-    // Contadores de linguagens (baseado no campo language)
-    const languageCounts: Record<string, number> = {}
-    snippets.forEach(snippet => {
-      if (snippet.language) {
-        languageCounts[snippet.language] = (languageCounts[snippet.language] || 0) + 1
-      }
-    })
-    
-    // Snippets sem tags
-    const untagged = snippets.filter(snippet => !snippet.tags || snippet.tags.length === 0).length
-    
-    // Snippets não categorizados
-    const uncategorized = snippets.filter(snippet => !snippet.category || snippet.category.trim() === '').length
-    
-    // Modificados recentemente (últimos 7 dias)
-    const recentlyModified = snippets.filter(snippet => 
-      new Date(snippet.updatedAt) >= sevenDaysAgo
-    ).length
-    
-    // Favoritos
-    const favorites = snippets.filter(snippet => snippet.favorite).length
-    
-    // Sem marcação (sem pasta e sem projeto)
-    const unassigned = snippets.filter(snippet => 
-      !snippet.folderId && !snippet.projectId
-    ).length
-    
-    // Mais usados (com mais de 0 uso)
-    const mostUsed = snippets.filter(snippet => snippet.usage_count > 0).length
-    
-    return {
-      totalSnippets: snippets.length,
-      categoryCounts,
-      projectCounts,
-      tagCounts,
-      languageCounts,
-      folderCounts,
-      projectItemCounts,
-      untagged,
-      uncategorized,
-      recentlyModified,
-      favorites,
-      unassigned,
-      mostUsed
-    }
-  },
+  getSnippetCounts: () => computeCounts(get().snippets),
 
   // Folders CRUD
   addFolder: (name, parentId) => {
@@ -348,7 +334,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newFolders = [...get().folders, newFolder]
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
@@ -356,8 +342,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
 
   updateFolder: (id, updates) => {
     const newFolders = get().folders.map(folder =>
-      folder.id === id 
-        ? { ...folder, ...updates, updatedAt: new Date().toISOString() } 
+      folder.id === id
+        ? { ...folder, ...updates, updatedAt: new Date().toISOString() }
         : folder
     )
     set({ folders: newFolders })
@@ -366,20 +352,14 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
 
   deleteFolder: (id) => {
     const state = get()
-    
-    // Get all descendant folders
     const descendantFolders = get().getDescendantFolders(id)
-    const allFolderIds = [id, ...descendantFolders.map(f => f.id)]
-    
-    // Remove folder and all descendants
-    const newFolders = state.folders.filter(folder => !allFolderIds.includes(folder.id))
-    set({ folders: newFolders })
+    const allFolderIds = new Set([id, ...descendantFolders.map(f => f.id)])
+
+    const newFolders = state.folders.filter(folder => !allFolderIds.has(folder.id))
+    const patch: Partial<AppState> = { folders: newFolders }
+    if (state.selectedFolderId === id) patch.selectedFolderId = null
+    set(patch)
     storage.saveFolders(newFolders)
-    
-    // Clear selection if this folder was selected
-    if (state.selectedFolderId === id) {
-      set({ selectedFolderId: null })
-    }
   },
 
   // Project Items CRUD
@@ -392,7 +372,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newProjectItems = [...get().projectItems, newProjectItem]
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
@@ -400,7 +380,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
 
   updateProjectItem: (id, updates) => {
     const newProjectItems = get().projectItems.map(project =>
-      project.id === id 
+      project.id === id
         ? { ...project, ...updates, updatedAt: new Date().toISOString() }
         : project
     )
@@ -410,123 +390,100 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
 
   deleteProjectItem: (id) => {
     const state = get()
-    
-    // Get all descendant projects
     const descendantProjects = get().getDescendantProjects(id)
-    const allProjectIds = [id, ...descendantProjects.map(p => p.id)]
-    
-    // Also get folders that are children of this project hierarchy
-    const foldersInProjectHierarchy = state.folders.filter(folder => 
-      allProjectIds.includes(folder.parentId || '')
+    const allProjectIds = new Set([id, ...descendantProjects.map(p => p.id)])
+
+    const foldersInProjectHierarchy = state.folders.filter(folder =>
+      allProjectIds.has(folder.parentId || '')
     )
-    
-    // Remove project and descendants
-    const newProjectItems = state.projectItems.filter(project => !allProjectIds.includes(project.id))
-    set({ projectItems: newProjectItems })
-    storage.saveProjectItems(newProjectItems)
-    
-    // Also remove child folders
-    const newFolders = state.folders.filter(folder => 
-      !foldersInProjectHierarchy.some(f => f.id === folder.id)
-    )
-    set({ folders: newFolders })
-    storage.saveFolders(newFolders)
-    
-    // Clear selection if this project was selected
-    if (state.selectedProjectId === id) {
-      set({ selectedProjectId: null })
+    const folderIdsToRemove = new Set(foldersInProjectHierarchy.map(f => f.id))
+
+    const newProjectItems = state.projectItems.filter(project => !allProjectIds.has(project.id))
+    const newFolders = state.folders.filter(folder => !folderIdsToRemove.has(folder.id))
+
+    const patch: Partial<AppState> = {
+      projectItems: newProjectItems,
+      folders: newFolders
     }
+    if (state.selectedProjectId === id) patch.selectedProjectId = null
+    set(patch)
+
+    storage.saveProjectItems(newProjectItems)
+    storage.saveFolders(newFolders)
   },
 
   // Navigation
-  setSelectedFolder: (folderId) => set({ 
+  setSelectedFolder: (folderId) => set({
     selectedFolderId: folderId,
-    selectedProjectId: null // Clear project selection when selecting folder
+    selectedProjectId: null
   }),
 
-  setSelectedProject: (projectId) => set({ 
+  setSelectedProject: (projectId) => set({
     selectedProjectId: projectId,
-    selectedFolderId: null // Clear folder selection when selecting project
+    selectedFolderId: null
   }),
 
-  setSelectedItem: (itemId) => set({ 
-    selectedItem: itemId 
+  setSelectedItem: (itemId) => set({
+    selectedItem: itemId
   }),
 
   // Force delete methods (used by confirmation modal)
   forceDeleteFolder: (id) => {
     const state = get()
-    
-    // Get all descendant folders
     const descendantFolders = get().getDescendantFolders(id)
-    const allFolderIds = [id, ...descendantFolders.map(f => f.id)]
-    
-    // Remove folder and all descendants
-    const newFolders = state.folders.filter(folder => !allFolderIds.includes(folder.id))
-    set({ folders: newFolders })
-    storage.saveFolders(newFolders)
-    
-    // Remove folderId from snippets that were in any of these folders
+    const allFolderIds = new Set([id, ...descendantFolders.map(f => f.id)])
+
+    const newFolders = state.folders.filter(folder => !allFolderIds.has(folder.id))
     const newSnippets = state.snippets.map(snippet =>
-      allFolderIds.includes(snippet.folderId || '')
+      allFolderIds.has(snippet.folderId || '')
         ? { ...snippet, folderId: undefined, updatedAt: new Date().toISOString() }
         : snippet
     )
-    set({ snippets: newSnippets })
+
+    const patch: Partial<AppState> = { folders: newFolders, snippets: newSnippets }
+    if (state.selectedFolderId === id) patch.selectedFolderId = null
+    set(patch)
+
+    storage.saveFolders(newFolders)
     storage.saveSnippets(newSnippets)
-    
-    // Clear selection if this folder was selected
-    if (state.selectedFolderId === id) {
-      set({ selectedFolderId: null })
-    }
   },
 
   forceDeleteProjectItem: (id) => {
     const state = get()
-    
-    // Get all descendant projects  
     const descendantProjects = get().getDescendantProjects(id)
-    const allProjectIds = [id, ...descendantProjects.map(p => p.id)]
-    
-    // Also get folders that are children of this project hierarchy
-    const foldersInProjectHierarchy = state.folders.filter(folder => 
-      allProjectIds.includes(folder.parentId || '')
+    const allProjectIds = new Set([id, ...descendantProjects.map(p => p.id)])
+
+    const foldersInProjectHierarchy = state.folders.filter(folder =>
+      allProjectIds.has(folder.parentId || '')
     )
-    const allFolderIds = foldersInProjectHierarchy.map(f => f.id)
-    
-    // Remove project and descendants
-    const newProjectItems = state.projectItems.filter(project => !allProjectIds.includes(project.id))
-    set({ projectItems: newProjectItems })
-    storage.saveProjectItems(newProjectItems)
-    
-    // Remove child folders  
-    const newFolders = state.folders.filter(folder => !allFolderIds.includes(folder.id))
-    set({ folders: newFolders })
-    storage.saveFolders(newFolders)
-    
-    // Remove projectId/folderId from snippets that were in this hierarchy
+    const allFolderIds = new Set(foldersInProjectHierarchy.map(f => f.id))
+
+    const newProjectItems = state.projectItems.filter(project => !allProjectIds.has(project.id))
+    const newFolders = state.folders.filter(folder => !allFolderIds.has(folder.id))
+
     const newSnippets = state.snippets.map(snippet => {
-      let updatedSnippet = { ...snippet }
-      
-      if (allProjectIds.includes(snippet.projectId || '')) {
-        updatedSnippet.projectId = undefined
-        updatedSnippet.updatedAt = new Date().toISOString()
+      const inProject = allProjectIds.has(snippet.projectId || '')
+      const inFolder = allFolderIds.has(snippet.folderId || '')
+      if (!inProject && !inFolder) return snippet
+      return {
+        ...snippet,
+        projectId: inProject ? undefined : snippet.projectId,
+        folderId: inFolder ? undefined : snippet.folderId,
+        updatedAt: new Date().toISOString()
       }
-      
-      if (allFolderIds.includes(snippet.folderId || '')) {
-        updatedSnippet.folderId = undefined
-        updatedSnippet.updatedAt = new Date().toISOString()
-      }
-      
-      return updatedSnippet
     })
-    set({ snippets: newSnippets })
-    storage.saveSnippets(newSnippets)
-    
-    // Clear selection if this project was selected
-    if (state.selectedProjectId === id) {
-      set({ selectedProjectId: null })
+
+    const patch: Partial<AppState> = {
+      projectItems: newProjectItems,
+      folders: newFolders,
+      snippets: newSnippets
     }
+    if (state.selectedProjectId === id) patch.selectedProjectId = null
+    set(patch)
+
+    storage.saveProjectItems(newProjectItems)
+    storage.saveFolders(newFolders)
+    storage.saveSnippets(newSnippets)
   },
 
   // Snippet Movement Methods
@@ -535,21 +492,16 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     const snippet = state.snippets.find(s => s.id === snippetId)
     if (!snippet) return
 
-    // Clear updates
     const updates: Partial<Snippet> = {}
 
     if (!folderId) {
-      // Moving to "no folder" - clear both folderId and projectId
       updates.folderId = undefined
       updates.projectId = undefined
     } else {
-      // Moving to a specific folder
       const targetFolder = state.folders.find(f => f.id === folderId)
       if (!targetFolder) return
 
       updates.folderId = folderId
-      // If the folder belongs to a project, clear the direct projectId
-      // (the project relationship is now through the folder)
       updates.projectId = undefined
     }
 
@@ -562,156 +514,110 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     if (!snippet) return
 
     if (!projectId) {
-      // Remove from project, keep current folder if it's not a project folder
       const currentFolder = snippet.folderId ? state.folders.find(f => f.id === snippet.folderId) : null
-      const updates: Partial<Snippet> = {
-        projectId: undefined
-      }
-      
-      // If current folder belongs to a project, also clear the folder
+      const updates: Partial<Snippet> = { projectId: undefined }
       if (currentFolder && currentFolder.parentId) {
         updates.folderId = undefined
       }
-      
       get().updateSnippet(snippetId, updates)
       return
     }
 
-    // Moving to a project - find or create a default folder within the project
     const projectFolders = state.folders.filter(folder => folder.parentId === projectId)
-    
+
     if (projectFolders.length === 0) {
-      // No folders in project - create a default one
-      const defaultFolderName = 'Snippets'
       const newFolder: Folder = {
         id: crypto.randomUUID(),
-        name: defaultFolderName,
+        name: 'Snippets',
         parentId: projectId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-      
+
       const newFolders = [...state.folders, newFolder]
       set({ folders: newFolders })
       storage.saveFolders(newFolders)
-      
-      // Move snippet to the new folder
-      const updates: Partial<Snippet> = {
+
+      get().updateSnippet(snippetId, {
         folderId: newFolder.id,
-        projectId: undefined // Clear direct project assignment since it's now through folder
-      }
-      get().updateSnippet(snippetId, updates)
+        projectId: undefined
+      })
     } else {
-      // Move to the first available folder in the project
-      const updates: Partial<Snippet> = {
+      get().updateSnippet(snippetId, {
         folderId: projectFolders[0].id,
-        projectId: undefined // Clear direct project assignment since it's now through folder
-      }
-      get().updateSnippet(snippetId, updates)
+        projectId: undefined
+      })
     }
   },
 
   // Helper methods for hierarchical operations
   getDescendantFolders: (folderId) => {
-    const state = get()
+    const folders = get().folders
     const descendants: Folder[] = []
-    
-    const findDescendants = (parentId: string) => {
-      const children = state.folders.filter(folder => folder.parentId === parentId)
-      for (const child of children) {
-        descendants.push(child)
-        findDescendants(child.id)
+    const stack = [folderId]
+    while (stack.length) {
+      const parentId = stack.pop()!
+      for (const folder of folders) {
+        if (folder.parentId === parentId) {
+          descendants.push(folder)
+          stack.push(folder.id)
+        }
       }
     }
-    
-    findDescendants(folderId)
     return descendants
   },
 
   getDescendantProjects: (projectId) => {
-    const state = get()
+    const projectItems = get().projectItems
     const descendants: ProjectItem[] = []
-    
-    const findDescendants = (parentId: string) => {
-      const children = state.projectItems.filter(project => project.parentId === parentId)
-      for (const child of children) {
-        descendants.push(child)
-        findDescendants(child.id)
+    const stack = [projectId]
+    while (stack.length) {
+      const parentId = stack.pop()!
+      for (const project of projectItems) {
+        if (project.parentId === parentId) {
+          descendants.push(project)
+          stack.push(project.id)
+        }
       }
     }
-    
-    findDescendants(projectId)
     return descendants
   },
 
-  // Data cleanup function
+  // Data cleanup function (silent in production — esbuild drops console)
   cleanupOrphanedData: () => {
     const state = get()
-    console.log('🧹 Limpando dados órfãos...')
-    
-    // Log current data for debugging
-    console.log('📊 Estado atual:')
-    console.log('- Snippets:', state.snippets.length)
-    console.log('- Pastas:', state.folders.length)
-    console.log('- Projetos:', state.projectItems.length)
-    console.log('- Categorias:', state.categories.length)
-    console.log('- Tags:', state.tags.length)
-    
-    // List all projects for debugging
-    console.log('📋 Projetos encontrados:')
-    state.projectItems.forEach(project => {
-      console.log(`  - ID: ${project.id}, Nome: ${project.name}, ParentId: ${project.parentId}`)
-    })
-    
-    // Clean up orphaned folders (folders with invalid parentId)
+
     const validProjectIds = new Set(state.projectItems.map(p => p.id))
     const validFolderIds = new Set(state.folders.map(f => f.id))
-    
+
     const cleanFolders = state.folders.filter(folder => {
-      if (!folder.parentId) return true // Root folders are valid
+      if (!folder.parentId) return true
       return validProjectIds.has(folder.parentId) || validFolderIds.has(folder.parentId)
     })
-    
-    // Clean up orphaned snippets (snippets with invalid folderId or projectId)
+
+    let snippetsChanged = false
     const cleanSnippets = state.snippets.map(snippet => {
-      const updatedSnippet = { ...snippet }
-      
-      // Clean invalid folder references
-      if (snippet.folderId && !validFolderIds.has(snippet.folderId)) {
-        console.log(`🧹 Removendo folderId inválido '${snippet.folderId}' do snippet '${snippet.title}'`)
-        updatedSnippet.folderId = undefined
+      const folderInvalid = snippet.folderId && !validFolderIds.has(snippet.folderId)
+      const projectInvalid = snippet.projectId && !validProjectIds.has(snippet.projectId)
+      if (!folderInvalid && !projectInvalid) return snippet
+      snippetsChanged = true
+      return {
+        ...snippet,
+        folderId: folderInvalid ? undefined : snippet.folderId,
+        projectId: projectInvalid ? undefined : snippet.projectId
       }
-      
-      // Clean invalid project references
-      if (snippet.projectId && !validProjectIds.has(snippet.projectId)) {
-        console.log(`🧹 Removendo projectId inválido '${snippet.projectId}' do snippet '${snippet.title}'`)
-        updatedSnippet.projectId = undefined
-      }
-      
-      return updatedSnippet
     })
-    
-    // Update state if changes were made
-    const hasChanges = 
-      cleanFolders.length !== state.folders.length ||
-      cleanSnippets.some((snippet, index) => 
-        snippet.folderId !== state.snippets[index].folderId ||
-        snippet.projectId !== state.snippets[index].projectId
-      )
-    
-    if (hasChanges) {
-      console.log('✅ Aplicando limpeza dos dados...')
-      set({ 
-        folders: cleanFolders,
-        snippets: cleanSnippets
+
+    const foldersChanged = cleanFolders.length !== state.folders.length
+
+    if (foldersChanged || snippetsChanged) {
+      set({
+        folders: foldersChanged ? cleanFolders : state.folders,
+        snippets: snippetsChanged ? cleanSnippets : state.snippets
       })
-      
-      // Save cleaned data
-      storage.saveFolders(cleanFolders)
-      storage.saveSnippets(cleanSnippets)
-      console.log('✅ Dados limpos e salvos!')
-    } else {
-      console.log('✅ Nenhuma limpeza necessária.')
+
+      if (foldersChanged) storage.saveFolders(cleanFolders)
+      if (snippetsChanged) storage.saveSnippets(cleanSnippets)
     }
   }
 }))
