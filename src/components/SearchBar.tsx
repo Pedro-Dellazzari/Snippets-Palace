@@ -1,12 +1,16 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
 import { useDarkMode } from '../hooks/useDarkMode'
 import NewSnippetModal from './NewSnippetModal'
 import TutorialTrigger from './TutorialTrigger'
 import Tooltip from './Tooltip'
 
-const SearchBar: React.FC = () => {
+interface SearchBarProps {
+  onOpenSettings: () => void
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ onOpenSettings }) => {
   const searchQuery = useStore(state => state.searchQuery)
   const setSearchQuery = useStore(state => state.setSearchQuery)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -58,7 +62,16 @@ const SearchBar: React.FC = () => {
       </div>
       
       <TutorialTrigger variant="icon" />
-      
+
+      <Tooltip content="Configurações">
+        <button
+          onClick={onOpenSettings}
+          className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110"
+        >
+          <Cog6ToothIcon className="h-5 w-5" />
+        </button>
+      </Tooltip>
+
       <Tooltip content={isDarkMode ? "Modo claro" : "Modo escuro"}>
         <button
           onClick={toggleDarkMode}

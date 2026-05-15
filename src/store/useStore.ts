@@ -1,7 +1,20 @@
 import { create } from 'zustand'
 import { Snippet, AppState, Folder, ProjectItem } from '../types'
 import Fuse from 'fuse.js'
-import { storage } from '../utils/storage'
+import { storage, StorageData } from '../utils/storage'
+import { loadFromFile, saveToFile } from '../utils/fileStorage'
+
+function getCurrentStorageData(get: () => AppState): StorageData {
+  const state = get()
+  return {
+    snippets: state.snippets,
+    categories: state.categories,
+    projects: state.projects,
+    tags: state.tags,
+    folders: state.folders,
+    projectItems: state.projectItems,
+  }
+}
 
 interface StoreActions {
   setSnippets: (snippets: Snippet[]) => void
@@ -15,7 +28,7 @@ interface StoreActions {
   incrementUsageCount: (id: string) => void
   toggleFavorite: (id: string) => void
   searchSnippets: (query: string) => void
-  loadPersistedData: () => void
+  loadPersistedData: () => Promise<void>
   exportData: () => string
   importData: (jsonData: string) => boolean
   moveSnippetToFolder: (snippetId: string, folderId: string | null) => void
@@ -80,14 +93,16 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   setSnippets: (snippets) => {
     set({ snippets })
     storage.saveSnippets(snippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets })
   },
-  
+
   addSnippet: (snippet) => {
     const newSnippets = [...get().snippets, snippet]
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
-  
+
   updateSnippet: (id, updates) => {
     const state = get()
     const newSnippets = state.snippets.map(snippet =>
@@ -95,30 +110,31 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
-    
-    // Auto refresh current view if needed
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+
     const updatedSnippet = newSnippets.find(s => s.id === id)
     if (updatedSnippet && state.selectedSnippet?.id === id) {
       set({ selectedSnippet: updatedSnippet })
     }
   },
-  
+
   deleteSnippet: (id) => {
     const state = get()
     const newSnippets = state.snippets.filter(snippet => snippet.id !== id)
-    set({ 
+    set({
       snippets: newSnippets,
       selectedSnippet: state.selectedSnippet?.id === id ? null : state.selectedSnippet
     })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
 
   duplicateSnippet: (id) => {
     const state = get()
     const originalSnippet = state.snippets.find(snippet => snippet.id === id)
-    
+
     if (!originalSnippet) return null
-    
+
     const duplicatedSnippet: Snippet = {
       ...originalSnippet,
       id: crypto.randomUUID(),
@@ -129,11 +145,12 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newSnippets = [...state.snippets, duplicatedSnippet]
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
-    
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+
     return duplicatedSnippet
   },
   
@@ -152,24 +169,22 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   
   incrementUsageCount: (id) => {
     const newSnippets = get().snippets.map(snippet =>
-      snippet.id === id 
-        ? { 
-            ...snippet, 
-            usage_count: snippet.usage_count + 1,
-            lastUsed: new Date().toISOString()
-          } 
+      snippet.id === id
+        ? { ...snippet, usage_count: snippet.usage_count + 1, lastUsed: new Date().toISOString() }
         : snippet
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
-  
+
   toggleFavorite: (id) => {
     const newSnippets = get().snippets.map(snippet =>
       snippet.id === id ? { ...snippet, favorite: !snippet.favorite } : snippet
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
   
   searchSnippets: (query) => {
@@ -198,8 +213,9 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ searchResults: results })
   },
   
-  loadPersistedData: () => {
-    const data = storage.loadAllData()
+  loadPersistedData: async () => {
+    const fileData = await loadFromFile()
+    const data = fileData ?? storage.loadAllData()
     set({
       snippets: data.snippets,
       categories: data.categories,
@@ -209,8 +225,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       projectItems: data.projectItems,
       selectedSnippet: data.snippets.length > 0 ? data.snippets[0] : null
     })
-    
-    // Clean up orphaned data after loading
+
     setTimeout(() => {
       get().cleanupOrphanedData()
     }, 100)
@@ -348,35 +363,31 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newFolders = [...get().folders, newFolder]
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
+    saveToFile({ ...getCurrentStorageData(get), folders: newFolders })
   },
 
   updateFolder: (id, updates) => {
     const newFolders = get().folders.map(folder =>
-      folder.id === id 
-        ? { ...folder, ...updates, updatedAt: new Date().toISOString() } 
-        : folder
+      folder.id === id ? { ...folder, ...updates, updatedAt: new Date().toISOString() } : folder
     )
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
+    saveToFile({ ...getCurrentStorageData(get), folders: newFolders })
   },
 
   deleteFolder: (id) => {
     const state = get()
-    
-    // Get all descendant folders
     const descendantFolders = get().getDescendantFolders(id)
     const allFolderIds = [id, ...descendantFolders.map(f => f.id)]
-    
-    // Remove folder and all descendants
     const newFolders = state.folders.filter(folder => !allFolderIds.includes(folder.id))
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
-    
-    // Clear selection if this folder was selected
+    saveToFile({ ...getCurrentStorageData(get), folders: newFolders })
+
     if (state.selectedFolderId === id) {
       set({ selectedFolderId: null })
     }
@@ -392,47 +403,42 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    
+
     const newProjectItems = [...get().projectItems, newProjectItem]
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
+    saveToFile({ ...getCurrentStorageData(get), projectItems: newProjectItems })
   },
 
   updateProjectItem: (id, updates) => {
     const newProjectItems = get().projectItems.map(project =>
-      project.id === id 
-        ? { ...project, ...updates, updatedAt: new Date().toISOString() }
-        : project
+      project.id === id ? { ...project, ...updates, updatedAt: new Date().toISOString() } : project
     )
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
+    saveToFile({ ...getCurrentStorageData(get), projectItems: newProjectItems })
   },
 
   deleteProjectItem: (id) => {
     const state = get()
-    
-    // Get all descendant projects
     const descendantProjects = get().getDescendantProjects(id)
     const allProjectIds = [id, ...descendantProjects.map(p => p.id)]
-    
-    // Also get folders that are children of this project hierarchy
-    const foldersInProjectHierarchy = state.folders.filter(folder => 
+
+    const foldersInProjectHierarchy = state.folders.filter(folder =>
       allProjectIds.includes(folder.parentId || '')
     )
-    
-    // Remove project and descendants
+
     const newProjectItems = state.projectItems.filter(project => !allProjectIds.includes(project.id))
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
-    
-    // Also remove child folders
-    const newFolders = state.folders.filter(folder => 
+
+    const newFolders = state.folders.filter(folder =>
       !foldersInProjectHierarchy.some(f => f.id === folder.id)
     )
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
-    
-    // Clear selection if this project was selected
+    saveToFile({ ...getCurrentStorageData(get), projectItems: newProjectItems, folders: newFolders })
+
     if (state.selectedProjectId === id) {
       set({ selectedProjectId: null })
     }
