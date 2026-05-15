@@ -80,6 +80,12 @@ export interface AppState {
   error: string | null
 }
 
+export interface StorageInfo {
+  storagePath: string
+  isCustomPath: boolean
+  defaultPath: string
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -87,6 +93,17 @@ declare global {
       onMenuNewSnippet: (callback: () => void) => void
       onMenuSearch: (callback: () => void) => void
       removeAllListeners: (channel: string) => void
+      settings: {
+        getStorageInfo: () => Promise<StorageInfo>
+        selectFolder: () => Promise<string | null>
+        setStoragePath: (newPath: string, data: unknown) => Promise<boolean>
+        resetStoragePath: () => Promise<boolean>
+        openFolder: (folderPath: string) => Promise<boolean>
+      }
+      fileStorage: {
+        load: () => Promise<unknown | null>
+        save: (data: unknown) => Promise<boolean>
+      }
     }
   }
 }

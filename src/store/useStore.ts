@@ -1,7 +1,20 @@
 import { create } from 'zustand'
 import { Snippet, AppState, Folder, ProjectItem } from '../types'
 import Fuse from 'fuse.js'
-import { storage } from '../utils/storage'
+import { storage, StorageData } from '../utils/storage'
+import { loadFromFile, saveToFile } from '../utils/fileStorage'
+
+function getCurrentStorageData(get: () => AppState): StorageData {
+  const state = get()
+  return {
+    snippets: state.snippets,
+    categories: state.categories,
+    projects: state.projects,
+    tags: state.tags,
+    folders: state.folders,
+    projectItems: state.projectItems,
+  }
+}
 
 interface SnippetCounts {
   totalSnippets: number
@@ -31,7 +44,7 @@ interface StoreActions {
   incrementUsageCount: (id: string) => void
   toggleFavorite: (id: string) => void
   searchSnippets: (query: string) => void
-  loadPersistedData: () => void
+  loadPersistedData: () => Promise<void>
   exportData: () => string
   importData: (jsonData: string) => boolean
   moveSnippetToFolder: (snippetId: string, folderId: string | null) => void
@@ -162,12 +175,14 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   setSnippets: (snippets) => {
     set({ snippets })
     storage.saveSnippets(snippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets })
   },
 
   addSnippet: (snippet) => {
     const newSnippets = [...get().snippets, snippet]
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
 
   updateSnippet: (id, updates) => {
@@ -192,6 +207,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       selectedSnippet: state.selectedSnippet?.id === id ? null : state.selectedSnippet
     })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
 
   duplicateSnippet: (id) => {
@@ -243,6 +259,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
 
   toggleFavorite: (id) => {
@@ -251,6 +268,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     )
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
+    saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
   },
 
   searchSnippets: (query) => {
@@ -338,6 +356,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     const newFolders = [...get().folders, newFolder]
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
+    saveToFile({ ...getCurrentStorageData(get), folders: newFolders })
   },
 
   updateFolder: (id, updates) => {
@@ -348,6 +367,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     )
     set({ folders: newFolders })
     storage.saveFolders(newFolders)
+    saveToFile({ ...getCurrentStorageData(get), folders: newFolders })
   },
 
   deleteFolder: (id) => {
@@ -376,6 +396,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     const newProjectItems = [...get().projectItems, newProjectItem]
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
+    saveToFile({ ...getCurrentStorageData(get), projectItems: newProjectItems })
   },
 
   updateProjectItem: (id, updates) => {
@@ -386,6 +407,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     )
     set({ projectItems: newProjectItems })
     storage.saveProjectItems(newProjectItems)
+    saveToFile({ ...getCurrentStorageData(get), projectItems: newProjectItems })
   },
 
   deleteProjectItem: (id) => {
