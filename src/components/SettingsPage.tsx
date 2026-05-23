@@ -102,6 +102,15 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
     await window.electronAPI.settings.openFolder(storageInfo.storagePath)
   }
 
+  function handleResetLayout() {
+    try {
+      localStorage.removeItem('react-resizable-panels:snippets-layout-v2')
+      window.location.reload()
+    } catch {
+      setStatus({ type: 'error', message: 'Erro ao restaurar o layout.' })
+    }
+  }
+
   const isElectron = !!window.electronAPI?.settings
 
   return (
@@ -222,6 +231,25 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                 </p>
               </div>
             )}
+          </section>
+
+          {/* Layout section */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+              Layout
+            </h3>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Restaurar as larguras dos painéis (sidebar, lista e detalhe) para os valores padrão.
+              </p>
+              <button
+                onClick={handleResetLayout}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
+              >
+                <ArrowPathIcon className="h-4 w-4" />
+                Restaurar layout padrão
+              </button>
+            </div>
           </section>
 
           {/* Status feedback */}

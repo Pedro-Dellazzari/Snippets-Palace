@@ -1,4 +1,5 @@
 import React, { memo, useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SidebarItem as SidebarItemType } from '../types/sidebar'
 import { useStore } from '../store/useStore'
 import { useInlineCreation } from '../hooks/useInlineCreation'
@@ -374,27 +375,30 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       </div>
 
       {/* Children */}
-      {hasChildren && (
-        <div 
-          className={clsx(
-            'transition-all duration-300 ease-in-out overflow-hidden border-l border-gray-200/40 dark:border-gray-600/40',
-            isExpanded ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0'
-          )}
-          style={{ marginLeft: `${paddingLeft + 8}px` }}
-        >
-          {item.children!.map(child => (
-            <SidebarItem
-              key={child.id}
-              item={child}
-              level={level + 1}
-              selectedItem={selectedItem}
-              expandedFolders={expandedFolders}
-              onSelect={onSelect}
-              onToggle={onToggle}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {hasChildren && isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
+            style={{ overflow: 'hidden', marginLeft: `${paddingLeft + 8}px` }}
+            className="border-l border-gray-200/40 dark:border-gray-600/40"
+          >
+            {item.children!.map(child => (
+              <SidebarItem
+                key={child.id}
+                item={child}
+                level={level + 1}
+                selectedItem={selectedItem}
+                expandedFolders={expandedFolders}
+                onSelect={onSelect}
+                onToggle={onToggle}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Context Menu */}
       <FolderProjectContextMenu

@@ -62,6 +62,17 @@ export interface SearchResult {
   }[]
 }
 
+export interface TicketLog {
+  id: string
+  ticketNumber: string
+  problemDescription: string
+  ticketUrl?: string
+  snippetId?: string
+  snippetTitle?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AppState {
   snippets: Snippet[]
   categories: Category[]
@@ -69,6 +80,7 @@ export interface AppState {
   tags: Tag[]
   folders: Folder[]
   projectItems: ProjectItem[]
+  ticketLogs: TicketLog[]
   selectedSnippet: Snippet | null
   searchQuery: string
   searchResults: SearchResult[]

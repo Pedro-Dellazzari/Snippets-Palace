@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Snippet, AppState, Folder, ProjectItem } from '../types'
+import { Snippet, AppState, Folder, ProjectItem, TicketLog } from '../types'
 import Fuse from 'fuse.js'
 import { storage, StorageData } from '../utils/storage'
 import { loadFromFile, saveToFile } from '../utils/fileStorage'
@@ -13,6 +13,7 @@ function getCurrentStorageData(get: () => AppState): StorageData {
     tags: state.tags,
     folders: state.folders,
     projectItems: state.projectItems,
+    ticketLogs: state.ticketLogs,
   }
 }
 
@@ -62,6 +63,11 @@ interface StoreActions {
   deleteProjectItem: (id: string) => void
   forceDeleteProjectItem: (id: string) => void
   getDescendantProjects: (projectId: string) => ProjectItem[]
+  // Ticket Logs
+  addTicketLog: (log: TicketLog) => void
+  updateTicketLog: (id: string, updates: Partial<TicketLog>) => void
+  deleteTicketLog: (id: string) => void
+  getTicketLogsForSnippet: (snippetId: string) => TicketLog[]
   // Data cleanup
   cleanupOrphanedData: () => void
   // Navigation
@@ -77,6 +83,7 @@ const initialState: AppState = {
   tags: [],
   folders: [],
   projectItems: [],
+  ticketLogs: [],
   selectedSnippet: null,
   searchQuery: '',
   searchResults: [],
@@ -296,6 +303,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       tags: data.tags,
       folders: data.folders,
       projectItems: data.projectItems,
+      ticketLogs: data.ticketLogs,
       selectedSnippet: data.snippets.length > 0 ? data.snippets[0] : null
     })
 
@@ -306,8 +314,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   },
 
   exportData: () => {
-    const { snippets, categories, projects, tags, folders, projectItems } = get()
-    return JSON.stringify({ snippets, categories, projects, tags, folders, projectItems }, null, 2)
+    const { snippets, categories, projects, tags, folders, projectItems, ticketLogs } = get()
+    return JSON.stringify({ snippets, categories, projects, tags, folders, projectItems, ticketLogs }, null, 2)
   },
 
   importData: (jsonData: string) => {
@@ -321,7 +329,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         projects: data.projects || [],
         tags: data.tags || [],
         folders: data.folders || [],
-        projectItems: data.projectItems || []
+        projectItems: data.projectItems || [],
+        ticketLogs: data.ticketLogs || []
       }
 
       storage.saveAllData(validData)
@@ -331,7 +340,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         projects: validData.projects,
         tags: validData.tags,
         folders: validData.folders,
-        projectItems: validData.projectItems
+        projectItems: validData.projectItems,
+        ticketLogs: validData.ticketLogs
       })
 
       return true
@@ -342,6 +352,34 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
   },
 
   getSnippetCounts: () => computeCounts(get().snippets),
+
+  // Ticket Logs CRUD
+  addTicketLog: (log) => {
+    const newLogs = [...get().ticketLogs, log]
+    set({ ticketLogs: newLogs })
+    storage.saveTicketLogs(newLogs)
+    saveToFile({ ...getCurrentStorageData(get), ticketLogs: newLogs })
+  },
+
+  updateTicketLog: (id, updates) => {
+    const newLogs = get().ticketLogs.map(log =>
+      log.id === id ? { ...log, ...updates, updatedAt: new Date().toISOString() } : log
+    )
+    set({ ticketLogs: newLogs })
+    storage.saveTicketLogs(newLogs)
+    saveToFile({ ...getCurrentStorageData(get), ticketLogs: newLogs })
+  },
+
+  deleteTicketLog: (id) => {
+    const newLogs = get().ticketLogs.filter(log => log.id !== id)
+    set({ ticketLogs: newLogs })
+    storage.saveTicketLogs(newLogs)
+    saveToFile({ ...getCurrentStorageData(get), ticketLogs: newLogs })
+  },
+
+  getTicketLogsForSnippet: (snippetId) => {
+    return get().ticketLogs.filter(log => log.snippetId === snippetId)
+  },
 
   // Folders CRUD
   addFolder: (name, parentId) => {

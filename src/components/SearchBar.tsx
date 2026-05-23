@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, lazy, Suspense } from 'react'
-import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
 import { useDarkMode } from '../hooks/useDarkMode'
 import TutorialTrigger from './TutorialTrigger'
@@ -9,7 +9,11 @@ const NewSnippetModal = lazy(() => import('./NewSnippetModal'))
 
 const SEARCH_DEBOUNCE_MS = 180
 
-const SearchBar: React.FC = () => {
+interface SearchBarProps {
+  onOpenTicketLog: () => void
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
   const setSearchQuery = useStore(state => state.setSearchQuery)
   const storeSearchQuery = useStore(state => state.searchQuery)
   const [localValue, setLocalValue] = useState(storeSearchQuery)
@@ -60,7 +64,7 @@ const SearchBar: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-4 px-8 py-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="flex-1 relative search-bar">
         <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
         <input
@@ -75,6 +79,15 @@ const SearchBar: React.FC = () => {
       </div>
 
       <TutorialTrigger variant="icon" />
+
+      <Tooltip content="Histórico de Tickets JIRA">
+        <button
+          onClick={onOpenTicketLog}
+          className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110"
+        >
+          <ClipboardDocumentListIcon className="h-5 w-5" />
+        </button>
+      </Tooltip>
 
       <Tooltip content={isDarkMode ? "Modo claro" : "Modo escuro"}>
         <button

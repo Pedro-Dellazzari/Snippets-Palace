@@ -121,7 +121,7 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-80 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm border-r border-gray-200/60 dark:border-gray-700/60 flex flex-col">
+    <div className="w-full h-full bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col">
 
       {/* Sidebar Content */}
       <div className="flex-1 overflow-y-auto px-2 py-6">

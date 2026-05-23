@@ -87,8 +87,16 @@ async function start() {
     process.exit(1);
   }
 
-  console.log('✅ React pronto! Iniciando Electron...');
-  
+  console.log('✅ React pronto! Compilando Electron...');
+  await new Promise((resolve, reject) => {
+    const tsc = spawn('node', ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.electron.json'], {
+      stdio: 'inherit',
+      shell: true
+    });
+    tsc.on('close', code => code === 0 ? resolve() : reject(new Error(`tsc exited with code ${code}`)));
+  });
+  console.log('✅ Electron compilado! Iniciando Electron...');
+
   // Iniciar Electron
   const electron = spawn('node', ['node_modules/electron/cli.js', '.'], {
     stdio: 'inherit',

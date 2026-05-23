@@ -98,3 +98,47 @@ code {
 .copy-icon-ping     { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
 .copy-text-slide    { animation: slideInText 0.8s ease-out 0.4s both; }
 .click-pulse        { animation: pulse-click 0.15s ease-in-out; }
+
+/* Sort dropdown — entrada rápida sem dependência de JS */
+@keyframes dropdownOpen {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.dropdown-enter {
+  animation: dropdownOpen 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top left;
+}
+
+/* Modo de edição — campos entram suavemente */
+@keyframes editModeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.edit-mode-enter {
+  animation: editModeIn 0.18s ease-out forwards;
+}
+
+/* Resize handle entre painéis (react-resizable-panels) */
+.resize-handle {
+  position: relative;
+  width: 5px;
+  background-color: rgb(229 231 235); /* gray-200 */
+  cursor: col-resize;
+  outline: none;
+  transition: background-color 0.15s ease;
+}
+.resize-handle:hover,
+.resize-handle:active {
+  background-color: rgb(59 130 246); /* blue-500 */
+}
+.resize-handle:focus-visible {
+  background-color: rgb(59 130 246);
+  box-shadow: 0 0 0 2px rgb(147 197 253); /* blue-300 */
+}
+.dark .resize-handle {
+  background-color: rgb(55 65 81); /* gray-700 */
+}
+.dark .resize-handle:hover,
+.dark .resize-handle:active {
+  background-color: rgb(96 165 250); /* blue-400 */
+}

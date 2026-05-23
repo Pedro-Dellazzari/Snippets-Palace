@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { backdropVariants, modalVariants } from '../utils/motionVariants'
 import { useStore } from '../store/useStore'
 import clsx from 'clsx'
 import ContextMenu, { ContextMenuFolder, ContextMenuProject } from './ContextMenu'
@@ -217,7 +219,7 @@ const SnippetList: React.FC = () => {
   }, [snippetToDelete, deleteSnippet])
 
   return (
-    <div className="w-96 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-gray-900 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
@@ -251,7 +253,7 @@ const SnippetList: React.FC = () => {
             </button>
 
             {showSortDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10 dropdown-enter">
                 {[
                   { value: 'newest', label: 'Mais recentes' },
                   { value: 'oldest', label: 'Mais antigos' },
@@ -337,35 +339,49 @@ const SnippetList: React.FC = () => {
       />
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Excluir snippet
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Tem certeza que deseja excluir "{snippetToDelete?.title}"? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false)
-                  setSnippetToDelete(null)
-                }}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDirectDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4"
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Excluir snippet
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Tem certeza que deseja excluir "{snippetToDelete?.title}"? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setSnippetToDelete(null)
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDirectDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Excluir
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {(showEditModal || showNewModal) && (
         <Suspense fallback={null}>

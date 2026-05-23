@@ -1,4 +1,6 @@
 import React, { useState, lazy, Suspense } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { backdropVariants, modalVariants } from '../utils/motionVariants'
 import { useStore } from '../store/useStore'
 import {
   ClipboardDocumentIcon,
@@ -157,9 +159,17 @@ const SnippetDetail: React.FC = () => {
     return languageMap[language.toLowerCase()] || 'plaintext'
   }
 
-  if (!selectedSnippet) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+  return (
+    <AnimatePresence mode="wait">
+    {!selectedSnippet ? (
+      <motion.div
+        key="empty"
+        className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-gray-400 dark:text-gray-500 mb-6">
             <ClipboardDocumentIcon className="h-20 w-20 mx-auto" />
@@ -171,18 +181,22 @@ const SnippetDetail: React.FC = () => {
             Escolha um snippet da lista para visualizar seu conteúdo e detalhes aqui.
           </p>
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
+      </motion.div>
+    ) : (
+    <motion.div
+      key={selectedSnippet.id}
+      className="flex-1 flex flex-col bg-white dark:bg-gray-900 w-full h-full"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+    >
       {/* Header */}
       <div className="p-8 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             {isEditing ? (
-              <>
+              <div className="edit-mode-enter w-full">
                 <div className="w-full">
                   <input
                     type="text"
@@ -204,7 +218,7 @@ const SnippetDetail: React.FC = () => {
                   placeholder="Descrição do snippet"
                   rows={2}
                 />
-              </>
+              </div>
             ) : (
               <>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
@@ -440,38 +454,54 @@ const SnippetDetail: React.FC = () => {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md mx-4 border border-gray-200 dark:border-gray-700">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrashIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md mx-4 border border-gray-200 dark:border-gray-700"
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrashIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  Excluir snippet?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                  Tem certeza que deseja excluir <strong>"{selectedSnippet.title}"</strong>? Esta ação não pode ser desfeita.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                Excluir snippet?
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Tem certeza que deseja excluir <strong>"{selectedSnippet.title}"</strong>? Esta ação não pode ser desfeita.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 font-medium shadow-sm hover:shadow"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 font-medium shadow-sm hover:shadow"
+                >
+                  Excluir
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+    )}
+    </AnimatePresence>
   )
 }
 

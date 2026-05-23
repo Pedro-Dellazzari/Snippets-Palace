@@ -1,4 +1,4 @@
-import { Snippet, Category, Project, Tag, Folder, ProjectItem } from '../types'
+import { Snippet, Category, Project, Tag, Folder, ProjectItem, TicketLog } from '../types'
 
 const STORAGE_KEYS = {
   SNIPPETS: 'snippets-app-snippets',
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   TAGS: 'snippets-app-tags',
   FOLDERS: 'snippets-app-folders',
   PROJECT_ITEMS: 'snippets-app-project-items',
+  TICKET_LOGS: 'snippets-app-ticket-logs',
   SETTINGS: 'snippets-app-settings'
 }
 
@@ -19,6 +20,7 @@ export interface StorageData {
   tags: Tag[]
   folders: Folder[]
   projectItems: ProjectItem[]
+  ticketLogs: TicketLog[]
 }
 
 class Storage {
@@ -144,6 +146,15 @@ class Storage {
     return this.loadFromStorage<ProjectItem[]>(STORAGE_KEYS.PROJECT_ITEMS, [])
   }
 
+  // Ticket Logs
+  saveTicketLogs(ticketLogs: TicketLog[]): boolean {
+    return this.saveToStorage(STORAGE_KEYS.TICKET_LOGS, ticketLogs)
+  }
+
+  loadTicketLogs(): TicketLog[] {
+    return this.loadFromStorage<TicketLog[]>(STORAGE_KEYS.TICKET_LOGS, [])
+  }
+
   // Load all data
   loadAllData(): StorageData {
     return {
@@ -152,7 +163,8 @@ class Storage {
       projects: this.loadProjects(),
       tags: this.loadTags(),
       folders: this.loadFolders(),
-      projectItems: this.loadProjectItems()
+      projectItems: this.loadProjectItems(),
+      ticketLogs: this.loadTicketLogs()
     }
   }
 
@@ -164,6 +176,7 @@ class Storage {
     this.saveTags(data.tags)
     this.saveFolders(data.folders)
     this.saveProjectItems(data.projectItems)
+    this.saveTicketLogs(data.ticketLogs)
     this.flush()
     return true
   }

@@ -1,4 +1,6 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import { useStore } from './store/useStore'
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext'
 import Sidebar from './components/Sidebar'
@@ -9,10 +11,16 @@ import SearchBar from './components/SearchBar'
 // Joyride is heavy (~300KB) and only needed during the tutorial. Defer its
 // download until the onboarding actually starts.
 const OnboardingTour = lazy(() => import('./components/OnboardingTour'))
+const TicketLogModal = lazy(() => import('./components/TicketLogModal'))
 
 function AppContent() {
   const loadPersistedData = useStore(state => state.loadPersistedData)
   const { isOnboardingActive, isShowingDoubleClickTip } = useOnboarding()
+  const [showTicketLog, setShowTicketLog] = useState(false)
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'snippets-layout-v2',
+    storage: localStorage,
+  })
 
   useEffect(() => {
     loadPersistedData()
@@ -20,19 +28,43 @@ function AppContent() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <SearchBar onOpenSettings={() => setShowSettings(true)} />
+      <SearchBar onOpenTicketLog={() => setShowTicketLog(true)} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <SnippetList />
-        <SnippetDetail />
-      </div>
+      <Group
+        orientation="horizontal"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+        className="flex-1 overflow-hidden"
+      >
+        <Panel id="sidebar" className="overflow-hidden" defaultSize="18%" minSize="14%" maxSize="28%">
+          <Sidebar />
+        </Panel>
+        <Separator className="resize-handle" />
+        <Panel id="list" className="overflow-hidden" defaultSize="22%" minSize="16%" maxSize="35%">
+          <SnippetList />
+        </Panel>
+        <Separator className="resize-handle" />
+        <Panel id="detail" className="overflow-hidden" defaultSize="60%" minSize="30%">
+          <SnippetDetail />
+        </Panel>
+      </Group>
 
       {(isOnboardingActive || isShowingDoubleClickTip) && (
         <Suspense fallback={null}>
           <OnboardingTour />
         </Suspense>
       )}
+
+      <AnimatePresence>
+        {showTicketLog && (
+          <Suspense fallback={null}>
+            <TicketLogModal
+              isOpen={showTicketLog}
+              onClose={() => setShowTicketLog(false)}
+            />
+          </Suspense>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

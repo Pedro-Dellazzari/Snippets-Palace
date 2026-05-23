@@ -68,7 +68,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
       onContextMenu={(e) => onContextMenu(e, snippet)}
       className={clsx(
         'px-4 py-2.5 cursor-pointer group relative snippet-card',
-        'transition-all duration-300 ease-out will-change-transform',
+        'transition-[transform,box-shadow,background-color,border-color,opacity] duration-200 ease-out will-change-transform',
         'hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:scale-[1.01] hover:shadow-sm',
         selected && 'bg-blue-50/50 dark:bg-blue-900/10 border-l-2 border-l-blue-500',
         copied && 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 scale-[1.03] shadow-lg shadow-green-100/50 dark:shadow-green-900/20',
