@@ -4,7 +4,7 @@ Um aplicativo desktop elegante para organizar, buscar e reutilizar seus trechos 
 
 > **📥 [Baixe a última versão aqui](../../releases/latest)** - Windows 10/11 (x64)
 
-## 🎯 Por que usar o Snippets App?
+## 🎯 Por que usar o Snippets App? 
 
 Cansado de procurar aquele snippet de código que você sempre esquece? O Snippets App é a solução perfeita para desenvolvedores que querem:
 
