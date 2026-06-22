@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { XMarkIcon, PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
 import { TicketLog } from '../types'
 import { backdropVariants, modalVariants } from '../utils/motionVariants'
 import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 
 interface TicketLogModalProps {
   isOpen: boolean
@@ -29,6 +30,7 @@ const emptyForm: FormState = {
 }
 
 const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
+  const { t, i18n } = useTranslation()
   const ticketLogs = useStore(state => state.ticketLogs)
   const snippets = useStore(state => state.snippets)
   const addTicketLog = useStore(state => state.addTicketLog)
@@ -100,8 +102,8 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
 
   const validate = (): boolean => {
     const newErrors: Partial<FormState> = {}
-    if (!form.ticketNumber.trim()) newErrors.ticketNumber = 'Número do ticket é obrigatório'
-    if (!form.problemDescription.trim()) newErrors.problemDescription = 'Descrição do problema é obrigatória'
+    if (!form.ticketNumber.trim()) newErrors.ticketNumber = t('ticketLogModal.errorTicketNumberRequired')
+    if (!form.problemDescription.trim()) newErrors.problemDescription = t('ticketLogModal.errorProblemDescriptionRequired')
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -177,11 +179,11 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
             )}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {view === 'list' ? 'Histórico de Tickets JIRA' : view === 'create' ? 'Novo Registro' : 'Editar Registro'}
+                {view === 'list' ? t('ticketLogModal.title') : view === 'create' ? t('ticketLogModal.newRecord') : t('ticketLogModal.editRecord')}
               </h2>
               {view === 'list' && (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {ticketLogs.length} {ticketLogs.length === 1 ? 'registro' : 'registros'}
+                  {t('ticketLogModal.recordsCount', { count: ticketLogs.length })}
                 </p>
               )}
             </div>
@@ -193,7 +195,7 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
               >
                 <PlusIcon className="h-4 w-4" />
-                Novo Registro
+                {t('ticketLogModal.newRecord')}
               </button>
             )}
             <button
@@ -221,7 +223,7 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               <input
                 ref={filterRef}
                 type="text"
-                placeholder="Filtrar por número do ticket ou descrição..."
+                placeholder={t('ticketLogModal.filterPlaceholder')}
                 value={filterQuery}
                 onChange={e => setFilterQuery(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -234,11 +236,11 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <p className="text-sm font-medium">
-                    {ticketLogs.length === 0 ? 'Nenhum registro ainda' : 'Nenhum resultado para o filtro'}
+                    {ticketLogs.length === 0 ? t('ticketLogModal.noRecordsYet') : t('ticketLogModal.noFilterResults')}
                   </p>
                   {ticketLogs.length === 0 && (
                     <p className="text-xs mt-1 text-center max-w-xs">
-                      Registre snippets que resolveram tickets JIRA para encontrá-los rapidamente depois.
+                      {t('ticketLogModal.noRecordsHint')}
                     </p>
                   )}
                 </div>
@@ -262,11 +264,11 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                           {log.snippetTitle && (
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Snippet: <span className="font-medium text-gray-700 dark:text-gray-300">{log.snippetTitle}</span>
+                              {t('ticketLogModal.snippetLabel')} <span className="font-medium text-gray-700 dark:text-gray-300">{log.snippetTitle}</span>
                             </span>
                           )}
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: ptBR })}
+                            {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: i18n.language.startsWith('pt') ? ptBR : enUS })}
                           </span>
                         </div>
                       </div>
@@ -276,7 +278,7 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                         {log.ticketUrl && (
                           <button
                             onClick={() => handleOpenUrl(log.ticketUrl!)}
-                            title="Abrir ticket"
+                            title={t('ticketLogModal.openTicket')}
                             className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                           >
                             <ArrowTopRightOnSquareIcon className="h-4 w-4" />
@@ -284,7 +286,7 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                         )}
                         <button
                           onClick={() => handleOpenEdit(log)}
-                          title="Editar"
+                          title={t('ticketLogModal.edit')}
                           className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                         >
                           <PencilIcon className="h-4 w-4" />
@@ -295,19 +297,19 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
                               onClick={() => handleDelete(log.id)}
                               className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                             >
-                              Confirmar
+                              {t('ticketLogModal.confirm')}
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                             >
-                              Cancelar
+                              {t('ticketLogModal.cancel')}
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => setConfirmDeleteId(log.id)}
-                            title="Excluir"
+                            title={t('ticketLogModal.delete')}
                             className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                           >
                             <TrashIcon className="h-4 w-4" />
@@ -333,12 +335,12 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               {/* Ticket Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Número do Ticket <span className="text-red-500">*</span>
+                  {t('ticketLogModal.ticketNumberLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   ref={ticketNumberRef}
                   type="text"
-                  placeholder="Ex: PROJ-1234"
+                  placeholder={t('ticketLogModal.ticketNumberPlaceholder')}
                   value={form.ticketNumber}
                   onChange={e => setForm(f => ({ ...f, ticketNumber: e.target.value }))}
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.ticketNumber ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'}`}
@@ -351,11 +353,11 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               {/* URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  URL do Ticket <span className="text-gray-400 font-normal">(opcional)</span>
+                  {t('ticketLogModal.ticketUrlLabel')} <span className="text-gray-400 font-normal">{t('ticketLogModal.optional')}</span>
                 </label>
                 <input
                   type="url"
-                  placeholder="https://jira.exemplo.com/browse/PROJ-1234"
+                  placeholder={t('ticketLogModal.ticketUrlPlaceholder')}
                   value={form.ticketUrl}
                   onChange={e => setForm(f => ({ ...f, ticketUrl: e.target.value }))}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -365,10 +367,10 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               {/* Problem Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Descrição do Problema <span className="text-red-500">*</span>
+                  {t('ticketLogModal.problemDescriptionLabel')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  placeholder="Descreva o problema que este snippet resolveu..."
+                  placeholder={t('ticketLogModal.problemDescriptionPlaceholder')}
                   value={form.problemDescription}
                   onChange={e => setForm(f => ({ ...f, problemDescription: e.target.value }))}
                   rows={4}
@@ -382,14 +384,14 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               {/* Snippet Select */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Snippet Vinculado <span className="text-gray-400 font-normal">(opcional)</span>
+                  {t('ticketLogModal.linkedSnippetLabel')} <span className="text-gray-400 font-normal">{t('ticketLogModal.optional')}</span>
                 </label>
                 <select
                   value={form.snippetId}
                   onChange={e => setForm(f => ({ ...f, snippetId: e.target.value }))}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 >
-                  <option value="">— Sem snippet vinculado —</option>
+                  <option value="">{t('ticketLogModal.noLinkedSnippet')}</option>
                   {snippets.map(s => (
                     <option key={s.id} value={s.id}>{s.title}</option>
                   ))}
@@ -407,13 +409,13 @@ const TicketLogModal: React.FC<TicketLogModalProps> = ({ isOpen, onClose }) => {
               onClick={() => { setView('list'); setErrors({}) }}
               className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
             >
-              Cancelar
+              {t('ticketLogModal.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
             >
-              {view === 'create' ? 'Criar Registro' : 'Salvar Alterações'}
+              {view === 'create' ? t('ticketLogModal.createRecord') : t('ticketLogModal.saveChanges')}
             </button>
           </div>
         )}

@@ -1,8 +1,9 @@
 import { create } from 'zustand'
-import { Snippet, AppState, Folder, ProjectItem, TicketLog } from '../types'
+import { Snippet, AppState, Folder, ProjectItem, TicketLog, HOT_SNIPPETS_LIMIT } from '../types'
 import Fuse from 'fuse.js'
 import { storage, StorageData } from '../utils/storage'
 import { loadFromFile, saveToFile } from '../utils/fileStorage'
+import i18n from '../i18n'
 
 function getCurrentStorageData(get: () => AppState): StorageData {
   const state = get()
@@ -44,6 +45,7 @@ interface StoreActions {
   setSidebarTab: (tab: 'categories' | 'projects' | 'tags') => void
   incrementUsageCount: (id: string) => void
   toggleFavorite: (id: string) => void
+  toggleHotSnippet: (id: string) => { ok: true } | { ok: false; reason: 'limit' | 'not-found' }
   searchSnippets: (query: string) => void
   loadPersistedData: () => Promise<void>
   exportData: () => string
@@ -93,6 +95,30 @@ const initialState: AppState = {
   selectedItem: 'all-snippets',
   isLoading: false,
   error: null
+}
+
+// ---- Hot snippets → tray sync (debounced) ----
+let hotSyncTimer: ReturnType<typeof setTimeout> | null = null
+let lastHotSignature = ''
+
+function syncHotSnippetsToTray(snippets: Snippet[]): void {
+  if (typeof window === 'undefined' || !window.electronAPI?.tray) return
+
+  if (hotSyncTimer) clearTimeout(hotSyncTimer)
+  hotSyncTimer = setTimeout(() => {
+    hotSyncTimer = null
+    const hot = snippets
+      .filter(s => s.isHot)
+      .slice(0, HOT_SNIPPETS_LIMIT)
+      .map(s => ({ id: s.id, title: s.title, content: s.content }))
+
+    // Avoid IPC chatter when nothing relevant changed
+    const signature = hot.map(s => `${s.id}:${s.title}`).join('|')
+    if (signature === lastHotSignature) return
+    lastHotSignature = signature
+
+    window.electronAPI.tray.updateHotSnippets(hot).catch(() => {})
+  }, 500)
 }
 
 // ---- Fuse index cache (rebuild only when snippets array reference changes) ----
@@ -183,6 +209,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ snippets })
     storage.saveSnippets(snippets)
     saveToFile({ ...getCurrentStorageData(get), snippets })
+    syncHotSnippetsToTray(snippets)
   },
 
   addSnippet: (snippet) => {
@@ -190,6 +217,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
     saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+    syncHotSnippetsToTray(newSnippets)
   },
 
   updateSnippet: (id, updates) => {
@@ -204,6 +232,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     }
     set(patch)
     storage.saveSnippets(newSnippets)
+    syncHotSnippetsToTray(newSnippets)
   },
 
   deleteSnippet: (id) => {
@@ -215,6 +244,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     })
     storage.saveSnippets(newSnippets)
     saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+    syncHotSnippetsToTray(newSnippets)
   },
 
   duplicateSnippet: (id) => {
@@ -226,7 +256,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     const duplicatedSnippet: Snippet = {
       ...originalSnippet,
       id: crypto.randomUUID(),
-      title: `Cópia de ${originalSnippet.title}`,
+      title: i18n.t('snippets.copyOf', { title: originalSnippet.title }),
       favorite: false,
       usage_count: 0,
       lastUsed: undefined,
@@ -267,6 +297,7 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
     saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+    // No tray sync — usage_count doesn't change title/content/isHot
   },
 
   toggleFavorite: (id) => {
@@ -276,6 +307,22 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
     set({ snippets: newSnippets })
     storage.saveSnippets(newSnippets)
     saveToFile({ ...getCurrentStorageData(get), snippets: newSnippets })
+  },
+
+  toggleHotSnippet: (id) => {
+    const state = get()
+    const target = state.snippets.find(s => s.id === id)
+    if (!target) return { ok: false, reason: 'not-found' }
+
+    if (!target.isHot) {
+      const currentHotCount = state.snippets.filter(s => s.isHot).length
+      if (currentHotCount >= HOT_SNIPPETS_LIMIT) {
+        return { ok: false, reason: 'limit' }
+      }
+    }
+
+    get().updateSnippet(id, { isHot: !target.isHot })
+    return { ok: true }
   },
 
   searchSnippets: (query) => {
@@ -306,6 +353,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
       ticketLogs: data.ticketLogs,
       selectedSnippet: data.snippets.length > 0 ? data.snippets[0] : null
     })
+
+    syncHotSnippetsToTray(data.snippets)
 
     // Defer cleanup so initial paint isn't blocked
     setTimeout(() => {
@@ -343,6 +392,8 @@ export const useStore = create<AppState & StoreActions>((set, get) => ({
         projectItems: validData.projectItems,
         ticketLogs: validData.ticketLogs
       })
+
+      syncHotSnippetsToTray(validData.snippets)
 
       return true
     } catch (error) {

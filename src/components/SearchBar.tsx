@@ -1,11 +1,13 @@
 import React, { useRef, useEffect, useState, lazy, Suspense } from 'react'
-import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
+import { MagnifyingGlassIcon, PlusIcon, SunIcon, MoonIcon, ClipboardDocumentListIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
 import { useDarkMode } from '../hooks/useDarkMode'
 import TutorialTrigger from './TutorialTrigger'
 import Tooltip from './Tooltip'
 
 const NewSnippetModal = lazy(() => import('./NewSnippetModal'))
+const SettingsPage = lazy(() => import('./SettingsPage'))
 
 const SEARCH_DEBOUNCE_MS = 180
 
@@ -14,11 +16,13 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
+  const { t } = useTranslation()
   const setSearchQuery = useStore(state => state.setSearchQuery)
   const storeSearchQuery = useStore(state => state.searchQuery)
   const [localValue, setLocalValue] = useState(storeSearchQuery)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [showNewSnippetModal, setShowNewSnippetModal] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const { isDarkMode, toggleDarkMode } = useDarkMode()
 
   // Push to the store after a short debounce so we don't rebuild Fuse on every keystroke
@@ -70,7 +74,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
         <input
           ref={searchInputRef}
           type="text"
-          placeholder="Pesquisar snippets..."
+          placeholder={t('searchBar.placeholder')}
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -80,7 +84,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
 
       <TutorialTrigger variant="icon" />
 
-      <Tooltip content="Histórico de Tickets JIRA">
+      <Tooltip content={t('searchBar.ticketHistory')}>
         <button
           onClick={onOpenTicketLog}
           className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110"
@@ -89,7 +93,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
         </button>
       </Tooltip>
 
-      <Tooltip content={isDarkMode ? "Modo claro" : "Modo escuro"}>
+      <Tooltip content={isDarkMode ? t('searchBar.lightMode') : t('searchBar.darkMode')}>
         <button
           onClick={toggleDarkMode}
           className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110"
@@ -98,13 +102,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
         </button>
       </Tooltip>
 
-      <Tooltip content="Criar novo snippet">
+      <Tooltip content={t('searchBar.createNewSnippet')}>
         <button
           className="flex items-center gap-3 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg hover:scale-105 font-medium btn-new-snippet"
           onClick={() => setShowNewSnippetModal(true)}
         >
           <PlusIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">Novo Snippet</span>
+          <span className="hidden sm:inline">{t('searchBar.newSnippet')}</span>
+        </button>
+      </Tooltip>
+
+      <Tooltip content={t('settings.title')}>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 hover:scale-110"
+        >
+          <Cog6ToothIcon className="h-5 w-5" />
         </button>
       </Tooltip>
 
@@ -114,6 +127,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onOpenTicketLog }) => {
             isOpen={showNewSnippetModal}
             onClose={() => setShowNewSnippetModal(false)}
           />
+        </Suspense>
+      )}
+
+      {showSettings && (
+        <Suspense fallback={null}>
+          <SettingsPage onClose={() => setShowSettings(false)} />
         </Suspense>
       )}
     </div>

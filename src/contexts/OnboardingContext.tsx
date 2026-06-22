@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Step } from 'react-joyride'
 
 export interface OnboardingContextType {
@@ -22,80 +23,12 @@ const OnboardingContext = createContext<OnboardingContextType | null>(null)
 const ONBOARDING_SEEN_KEY = 'snippets-app-onboarding-seen'
 const DOUBLE_CLICK_TIP_SEEN_KEY = 'snippets-app-double-click-tip-seen'
 
-const tutorialSteps: Step[] = [
-  {
-    target: '.sidebar-todos',
-    content: 'Aqui você encontra todos os snippets salvos, independente da pasta, projeto ou linguagem. É o seu ponto central para acessar todo o conteúdo.',
-    title: '📄 Todos os Snippets',
-    placement: 'right',
-    disableBeacon: true
-  },
-  {
-    target: '.sidebar-favorites',
-    content: 'Clique aqui para ver apenas seus snippets favoritos. Marque um snippet como favorito clicando no ícone de coração.',
-    title: '❤️ Favoritos',
-    placement: 'right',
-    disableBeacon: true
-  },
-  {
-    target: '.btn-new-snippet',
-    content: 'Clique aqui para adicionar um novo snippet. Você pode definir título, linguagem, tags e muito mais. Use Ctrl+N como atalho.',
-    title: '✨ Criar Novo Snippet',
-    placement: 'bottom',
-    disableBeacon: true
-  },
-  {
-    target: '.snippet-card:first-child',
-    content: 'Dê dois cliques rápidos em qualquer snippet para copiá-lo automaticamente para a área de transferência com feedback visual.',
-    title: '⚡ Copiar Rapidamente',
-    placement: 'top',
-    disableBeacon: true
-  },
-  {
-    target: '.sidebar-folders',
-    content: 'Organize seus snippets em pastas para manter tudo organizado por contexto ou categoria. Você pode criar hierarquias de pastas.',
-    title: '📁 Pastas',
-    placement: 'right',
-    disableBeacon: true
-  },
-  {
-    target: '.sidebar-projects',
-    content: 'Gerencie seus projetos e organize snippets por contexto de trabalho. Ideal para separar códigos de diferentes aplicações.',
-    title: '🚀 Projetos',
-    placement: 'right',
-    disableBeacon: true
-  },
-  {
-    target: '.search-bar',
-    content: 'Use a busca para encontrar snippets por título, conteúdo, tags ou linguagem. A busca é inteligente e em tempo real.',
-    title: '🔍 Busca Inteligente',
-    placement: 'bottom',
-    disableBeacon: true
-  }
-]
-
-const doubleClickTipSteps: Step[] = [
-  {
-    target: '.snippet-card:first-child',
-    content: 'Parabéns pelo seu primeiro snippet! 🎉 Dica rápida: Dê dois cliques rápidos em qualquer snippet para copiá-lo automaticamente para a área de transferência.',
-    title: '⚡ Dica: Copiar com Duplo Clique',
-    placement: 'top',
-    disableBeacon: true
-  },
-  {
-    target: '.snippet-card:first-child',
-    content: 'Clique com o botão direito do mouse em qualquer snippet para acessar opções de organização, como mover para pastas e projetos.',
-    title: '📁 Dica: Organizar Snippets',
-    placement: 'top',
-    disableBeacon: true
-  }
-]
-
 interface OnboardingProviderProps {
   children: React.ReactNode
 }
 
 export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children }) => {
+  const { t } = useTranslation()
   const [isOnboardingActive, setIsOnboardingActive] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false)
@@ -162,6 +95,75 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       setHasSeenDoubleClickTip(true)
     }
   }
+
+  const tutorialSteps: Step[] = useMemo(() => [
+    {
+      target: '.sidebar-todos',
+      content: t('onboarding.steps.allSnippets.content'),
+      title: t('onboarding.steps.allSnippets.title'),
+      placement: 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.sidebar-favorites',
+      content: t('onboarding.steps.favorites.content'),
+      title: t('onboarding.steps.favorites.title'),
+      placement: 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.btn-new-snippet',
+      content: t('onboarding.steps.newSnippet.content'),
+      title: t('onboarding.steps.newSnippet.title'),
+      placement: 'bottom',
+      disableBeacon: true
+    },
+    {
+      target: '.snippet-card:first-child',
+      content: t('onboarding.steps.quickCopy.content'),
+      title: t('onboarding.steps.quickCopy.title'),
+      placement: 'top',
+      disableBeacon: true
+    },
+    {
+      target: '.sidebar-folders',
+      content: t('onboarding.steps.folders.content'),
+      title: t('onboarding.steps.folders.title'),
+      placement: 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.sidebar-projects',
+      content: t('onboarding.steps.projects.content'),
+      title: t('onboarding.steps.projects.title'),
+      placement: 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.search-bar',
+      content: t('onboarding.steps.search.content'),
+      title: t('onboarding.steps.search.title'),
+      placement: 'bottom',
+      disableBeacon: true
+    }
+  ], [t])
+
+  const doubleClickTipSteps: Step[] = useMemo(() => [
+    {
+      target: '.snippet-card:first-child',
+      content: t('onboarding.doubleClickTip.copyContent'),
+      title: t('onboarding.doubleClickTip.copyTitle'),
+      placement: 'top',
+      disableBeacon: true
+    },
+    {
+      target: '.snippet-card:first-child',
+      content: t('onboarding.doubleClickTip.organizeContent'),
+      title: t('onboarding.doubleClickTip.organizeTitle'),
+      placement: 'top',
+      disableBeacon: true
+    }
+  ], [t])
 
   const value: OnboardingContextType = {
     isOnboardingActive,

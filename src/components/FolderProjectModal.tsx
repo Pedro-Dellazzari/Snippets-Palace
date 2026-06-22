@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import { Folder, ProjectItem } from '../types'
 import clsx from 'clsx'
@@ -18,8 +19,9 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
   editItem,
   parentId
 }) => {
+  const { t } = useTranslation()
   const { addFolder, updateFolder, addProjectItem, updateProjectItem, folders, projectItems } = useStore()
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -50,7 +52,7 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
     const newErrors: Record<string, string> = {}
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório'
+      newErrors.name = t('folderProjectModal.errorNameRequired')
     }
     
     setErrors(newErrors)
@@ -99,7 +101,7 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
   // Build hierarchical options for parent selection
   const getParentOptions = () => {
     const options: { id: string; name: string; level: number }[] = [
-      { id: '', name: 'Nenhum (raiz)', level: 0 }
+      { id: '', name: t('common.none'), level: 0 }
     ]
 
     if (type === 'folder') {
@@ -150,9 +152,9 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
   if (!isOpen) return null
 
   const isProject = type === 'project'
-  const title = editItem 
-    ? `Editar ${isProject ? 'Projeto' : 'Pasta'}`
-    : `Nova ${isProject ? 'Projeto' : 'Pasta'}`
+  const title = editItem
+    ? (isProject ? t('folderProjectModal.editProject') : t('folderProjectModal.editFolder'))
+    : (isProject ? t('folderProjectModal.newProject') : t('folderProjectModal.newFolder'))
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -165,7 +167,7 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nome
+                {t('folderProjectModal.nameLabel')}
               </label>
               <input
                 type="text"
@@ -174,11 +176,11 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
                 className={clsx(
                   'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
                   'dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100',
-                  errors.name 
-                    ? 'border-red-500 focus:ring-red-500' 
+                  errors.name
+                    ? 'border-red-500 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-400'
                 )}
-                placeholder={`Nome ${isProject ? 'do projeto' : 'da pasta'}`}
+                placeholder={isProject ? t('folderProjectModal.namePlaceholderProject') : t('folderProjectModal.namePlaceholderFolder')}
                 autoFocus
               />
               {errors.name && (
@@ -190,7 +192,7 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
             {type === 'folder' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Pasta pai
+                  {t('folderProjectModal.parentFolderLabel')}
                 </label>
                 <select
                   value={formData.parentId}
@@ -210,14 +212,14 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
             {isProject && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Descrição (opcional)
+                  {t('folderProjectModal.descriptionLabel')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors dark:bg-gray-700 dark:text-gray-100 resize-none"
-                  placeholder="Descrição do projeto"
+                  placeholder={t('folderProjectModal.descriptionPlaceholder')}
                 />
               </div>
             )}
@@ -228,13 +230,13 @@ const FolderProjectModal: React.FC<FolderProjectModalProps> = ({
                 onClick={onClose}
                 className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
               >
-                Cancelar
+                {t('folderProjectModal.cancel')}
               </button>
               <button
                 type="submit"
                 className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
               >
-                {editItem ? 'Salvar' : 'Criar'}
+                {editItem ? t('folderProjectModal.save') : t('folderProjectModal.create')}
               </button>
             </div>
           </form>

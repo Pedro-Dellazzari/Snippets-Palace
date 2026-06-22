@@ -1,12 +1,17 @@
-# 📚 Snippets App
+# 📚 Snippet Palace
 
-Um aplicativo desktop elegante para organizar, buscar e reutilizar seus trechos de código de forma rápida e prática.
+O Snippet palace é uma aplicação feita 100% com inteligência Artificial. 
+
+O intuito do aplicativo é organizar e facilitar a reutilização de trechos de código, que surgiu como uma necessidade pessoal trabalhando como engenheiro de dados aonde tinha várias querys que tinham que ser usadas de forma constante. 
+
+Eu faço o melhor para garantir a segurança e funcionamento do aplicativo, contudo eu não escrevi uma única linha de código e apenas utilizei a IA de fato para realizar a construção disso. A única coisa que não foi feita pela IA está sendo esse texto que você está lendo. 
+
 
 > **📥 [Baixe a última versão aqui](../../releases/latest)** - Windows 10/11 (x64)
 
-## 🎯 Por que usar o Snippets App? 
+## 🎯 Por que usar o Snippet Palace? 
 
-Cansado de procurar aquele snippet de código que você sempre esquece? O Snippets App é a solução perfeita para desenvolvedores que querem:
+Cansado de procurar aquele snippet de código que você sempre esquece? O Snippet Palace é a solução perfeita para desenvolvedores que querem:
 
 - ✅ Organizar código de forma profissional
 - ✅ Encontrar snippets em segundos
@@ -40,31 +45,15 @@ Encontre qualquer snippet instantaneamente com busca fuzzy que procura em títul
 
 ### Opção 1: Instalador (Recomendado)
 1. Acesse [Releases](../../releases/latest)
-2. Baixe `Snippets App Setup x.x.x.exe`
+2. Baixe `Snippet Palace Setup x.x.x.exe`
 3. Execute o instalador
 4. Pronto! O app estará no menu Iniciar
 
 ### Opção 2: Versão Portátil
 1. Acesse [Releases](../../releases/latest)
-2. Baixe `Snippets App x.x.x Portable.exe`
+2. Baixe `Snippet Palace x.x.x Portable.exe`
 3. Execute direto, sem instalação
 4. Perfeito para uso em pen drives ou ambientes restritos
-
-## 🎨 Interface
-
-O aplicativo possui um layout intuitivo de 3 painéis:
-
-1. **📂 Barra Lateral**: Navegue por pastas, projetos, tags e favoritos
-2. **📋 Lista Central**: Veja todos os snippets com prévia e busca instantânea
-3. **💻 Editor**: Visualize e edite código com syntax highlighting completo
-
-## 🛠️ Tecnologias
-
-Desenvolvido com as melhores tecnologias modernas:
-- React 18 + TypeScript
-- Electron 36
-- Monaco Editor (VS Code)
-- Tailwind CSS
 
 ## 🔒 Privacidade
 
@@ -82,6 +71,5 @@ MIT License - veja [LICENSE](./LICENSE) para mais detalhes.
 
 ---
 
-**Feito com ❤️ para desenvolvedores que amam código organizado**
 
-Desenvolvido por Pedro
+Supervisionador de Claude Code: Pedro Dellazzari

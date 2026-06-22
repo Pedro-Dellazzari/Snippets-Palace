@@ -1,4 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { backdropVariants, modalVariants } from '../utils/motionVariants'
 import { useStore } from '../store/useStore'
@@ -8,23 +9,26 @@ import {
   PencilIcon,
   TrashIcon,
   CalendarDaysIcon,
-  EyeIcon
+  EyeIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartIconSolid, CheckIcon } from '@heroicons/react/24/solid'
+import { HeartIcon as HeartIconSolid, CheckIcon, BoltIcon as BoltIconSolid } from '@heroicons/react/24/solid'
 import clsx from 'clsx'
 
 // Lazy-load Monaco (~3-5MB) so initial app paint is dramatically lighter.
 const Editor = lazy(() => import('@monaco-editor/react'))
 import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 import { getLanguageColor, getTagColor, getLightColor } from '../utils/colors'
 import Tooltip from './Tooltip'
 
 const SnippetDetail: React.FC = () => {
+  const { t, i18n } = useTranslation()
   // Granular selectors keep this component out of the re-render path for
   // unrelated state changes (folders, sidebar tabs, search results, etc.).
   const selectedSnippet = useStore(state => state.selectedSnippet)
   const toggleFavorite = useStore(state => state.toggleFavorite)
+  const toggleHotSnippet = useStore(state => state.toggleHotSnippet)
   const incrementUsageCount = useStore(state => state.incrementUsageCount)
   const updateSnippet = useStore(state => state.updateSnippet)
   const deleteSnippet = useStore(state => state.deleteSnippet)
@@ -33,6 +37,7 @@ const SnippetDetail: React.FC = () => {
   const [copied, setCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [hotLimitToast, setHotLimitToast] = useState(false)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const [editForm, setEditForm] = useState({
     title: '',
@@ -82,15 +87,15 @@ const SnippetDetail: React.FC = () => {
     const newErrors: Record<string, string> = {}
     
     if (!editForm.title.trim()) {
-      newErrors.title = 'Título é obrigatório'
+      newErrors.title = t('snippetDetail.errorTitleRequired')
     }
-    
+
     if (!editForm.content.trim()) {
-      newErrors.content = 'Código é obrigatório'
+      newErrors.content = t('snippetDetail.errorContentRequired')
     }
-    
+
     if (!editForm.language.trim()) {
-      newErrors.language = 'Linguagem é obrigatória'
+      newErrors.language = t('snippetDetail.errorLanguageRequired')
     }
     
     setEditErrors(newErrors)
@@ -126,6 +131,15 @@ const SnippetDetail: React.FC = () => {
     setShowDeleteConfirm(false)
   }
 
+  const handleToggleHot = () => {
+    if (!selectedSnippet) return
+    const result = toggleHotSnippet(selectedSnippet.id)
+    if (!result.ok && result.reason === 'limit') {
+      setHotLimitToast(true)
+      setTimeout(() => setHotLimitToast(false), 3000)
+    }
+  }
+
   const handleFormChange = (field: string, value: string) => {
     setEditForm(prev => ({ ...prev, [field]: value }))
     if (editErrors[field]) {
@@ -135,12 +149,12 @@ const SnippetDetail: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { 
+      return formatDistanceToNow(new Date(dateString), {
         addSuffix: true,
-        locale: ptBR 
+        locale: i18n.language.startsWith('pt') ? ptBR : enUS
       })
     } catch {
-      return 'Data inválida'
+      return t('common.invalidDate')
     }
   }
 
@@ -175,10 +189,10 @@ const SnippetDetail: React.FC = () => {
             <ClipboardDocumentIcon className="h-20 w-20 mx-auto" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-            Selecione um snippet
+            {t('snippetDetail.selectSnippet')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-            Escolha um snippet da lista para visualizar seu conteúdo e detalhes aqui.
+            {t('snippetDetail.selectSnippetDescription')}
           </p>
         </div>
       </motion.div>
@@ -205,7 +219,7 @@ const SnippetDetail: React.FC = () => {
                     className={`text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 w-full bg-transparent border-b-2 focus:outline-none ${
                       editErrors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
                     }`}
-                    placeholder="Título do snippet"
+                    placeholder={t('snippetDetail.titlePlaceholder')}
                   />
                   {editErrors.title && (
                     <p className="text-red-500 text-sm mt-1">{editErrors.title}</p>
@@ -215,7 +229,7 @@ const SnippetDetail: React.FC = () => {
                   value={editForm.description}
                   onChange={(e) => handleFormChange('description', e.target.value)}
                   className="text-gray-700 dark:text-gray-300 w-full bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 outline-none resize-none"
-                  placeholder="Descrição do snippet"
+                  placeholder={t('snippetDetail.descriptionPlaceholder')}
                   rows={2}
                 />
               </div>
@@ -240,18 +254,36 @@ const SnippetDetail: React.FC = () => {
                   onClick={handleEditToggle}
                   className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 font-medium"
                 >
-                  Cancelar
+                  {t('snippetDetail.cancel')}
                 </button>
                 <button
                   onClick={handleSaveEdit}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow font-medium"
                 >
-                  Salvar
+                  {t('snippetDetail.save')}
                 </button>
               </>
             ) : (
               <>
-                <Tooltip content={selectedSnippet.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}>
+                <Tooltip content={selectedSnippet.isHot ? t('snippetDetail.removeFromTray') : t('snippetDetail.addToTray')}>
+                  <button
+                    onClick={handleToggleHot}
+                    className={clsx(
+                      'p-3 rounded-xl transition-all duration-200 hover:scale-110',
+                      selectedSnippet.isHot
+                        ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-yellow-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    )}
+                  >
+                    {selectedSnippet.isHot ? (
+                      <BoltIconSolid className="h-5 w-5" />
+                    ) : (
+                      <BoltIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </Tooltip>
+
+                <Tooltip content={selectedSnippet.favorite ? t('snippetDetail.removeFromFavorites') : t('snippetDetail.addToFavorites')}>
                   <button
                     onClick={() => toggleFavorite(selectedSnippet.id)}
                     className={clsx(
@@ -269,7 +301,7 @@ const SnippetDetail: React.FC = () => {
                   </button>
                 </Tooltip>
                 
-                <Tooltip content="Editar snippet">
+                <Tooltip content={t('snippetDetail.editSnippet')}>
                   <button
                     onClick={handleEditToggle}
                     className="p-3 text-gray-400 dark:text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 hover:scale-110"
@@ -277,8 +309,8 @@ const SnippetDetail: React.FC = () => {
                     <PencilIcon className="h-5 w-5" />
                   </button>
                 </Tooltip>
-                
-                <Tooltip content="Excluir snippet">
+
+                <Tooltip content={t('snippetDetail.deleteSnippet')}>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="p-3 text-gray-400 dark:text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200 hover:scale-110"
@@ -286,7 +318,7 @@ const SnippetDetail: React.FC = () => {
                     <TrashIcon className="h-5 w-5" />
                   </button>
                 </Tooltip>
-                
+
                 <button
                   onClick={handleCopy}
                   className={clsx(
@@ -299,12 +331,12 @@ const SnippetDetail: React.FC = () => {
                   {copied ? (
                     <>
                       <CheckIcon className="h-4 w-4" />
-                      <span>Copiado!</span>
+                      <span>{t('snippetDetail.copied')}</span>
                     </>
                   ) : (
                     <>
                       <ClipboardDocumentIcon className="h-4 w-4" />
-                      <span>Copiar</span>
+                      <span>{t('snippetDetail.copy')}</span>
                     </>
                   )}
                 </button>
@@ -319,7 +351,7 @@ const SnippetDetail: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Linguagem
+                  {t('snippetDetail.languageLabel')}
                 </label>
                 <input
                   type="text"
@@ -328,7 +360,7 @@ const SnippetDetail: React.FC = () => {
                   className={`px-3 py-1 border text-sm rounded-lg focus:outline-none ${
                     editErrors.language ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
                   }`}
-                  placeholder="Ex: SQL, Python..."
+                  placeholder={t('snippetDetail.languagePlaceholder')}
                 />
                 {editErrors.language && (
                   <p className="text-red-500 text-sm mt-1">{editErrors.language}</p>
@@ -336,14 +368,14 @@ const SnippetDetail: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags (separadas por vírgula)
+                  {t('snippetDetail.tagsLabel')}
                 </label>
                 <input
                   type="text"
                   value={editForm.tags}
                   onChange={(e) => handleFormChange('tags', e.target.value)}
                   className="w-full px-3 py-1 border border-gray-300 text-sm rounded-lg focus:outline-none focus:border-blue-500"
-                  placeholder="Ex: database, cleanup, performance"
+                  placeholder={t('snippetDetail.tagsPlaceholder')}
                 />
               </div>
             </div>
@@ -381,25 +413,25 @@ const SnippetDetail: React.FC = () => {
             </span>
           </div>
           
-          <Tooltip content={`Última atualização: ${formatDate(selectedSnippet.updatedAt)}`}>
+          <Tooltip content={t('snippetDetail.lastUpdated', { date: formatDate(selectedSnippet.updatedAt) })}>
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <CalendarDaysIcon className="h-4 w-4" />
               <span className="text-sm">{formatDate(selectedSnippet.updatedAt)}</span>
             </div>
           </Tooltip>
-          
+
           {selectedSnippet.usage_count > 0 && (
-            <Tooltip content="Número de vezes copiado">
+            <Tooltip content={t('snippetDetail.copyCount')}>
               <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full">
                 <EyeIcon className="h-4 w-4" />
                 <span className="text-sm font-medium">{selectedSnippet.usage_count}</span>
               </div>
             </Tooltip>
           )}
-          
+
           {selectedSnippet.projectId && (
             <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-3 py-1 rounded-full">
-              <span className="text-sm font-medium">{projectItems.find(p => p.id === selectedSnippet.projectId)?.name || 'Projeto'}</span>
+              <span className="text-sm font-medium">{projectItems.find(p => p.id === selectedSnippet.projectId)?.name || t('snippetDetail.defaultProjectLabel')}</span>
             </div>
           )}
         </div>
@@ -417,7 +449,7 @@ const SnippetDetail: React.FC = () => {
             ? 'border-red-300 dark:border-red-700' 
             : 'border-gray-200 dark:border-gray-700'
         }`}>
-          <Suspense fallback={<div className="flex items-center justify-center h-full text-gray-500">Carregando editor...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-full text-gray-500">{t('common.loadingEditor')}</div>}>
             <Editor
               height="100%"
               language={getLanguageForEditor(isEditing ? editForm.language : selectedSnippet.language)}
@@ -445,13 +477,30 @@ const SnippetDetail: React.FC = () => {
               }}
               loading={
                 <div className="flex items-center justify-center h-full text-gray-500">
-                  Carregando editor...
+                  {t('common.loadingEditor')}
                 </div>
               }
             />
           </Suspense>
         </div>
       </div>
+
+      {/* Hot Snippets limit toast */}
+      <AnimatePresence>
+        {hotLimitToast && (
+          <motion.div
+            className="fixed bottom-6 right-6 z-50 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 px-5 py-3 rounded-xl shadow-lg flex items-center gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <BoltIconSolid className="h-5 w-5 text-yellow-500" />
+            <span className="text-sm font-medium">
+              {t('snippetDetail.hotLimitReached')}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
@@ -475,10 +524,10 @@ const SnippetDetail: React.FC = () => {
                   <TrashIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  Excluir snippet?
+                  {t('snippetDetail.deleteConfirmTitle')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                  Tem certeza que deseja excluir <strong>"{selectedSnippet.title}"</strong>? Esta ação não pode ser desfeita.
+                  {t('snippetDetail.deleteConfirmMessage', { title: selectedSnippet.title })}
                 </p>
               </div>
               <div className="flex gap-3">
@@ -486,13 +535,13 @@ const SnippetDetail: React.FC = () => {
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium"
                 >
-                  Cancelar
+                  {t('snippetDetail.cancel')}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 font-medium shadow-sm hover:shadow"
                 >
-                  Excluir
+                  {t('snippetDetail.deleteSnippet')}
                 </button>
               </div>
             </motion.div>

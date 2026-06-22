@@ -9,6 +9,7 @@ export interface Snippet {
   folderId?: string
   projectId?: string
   favorite: boolean
+  isHot?: boolean
   createdAt: string
   updatedAt: string
   usage_count: number
@@ -98,6 +99,23 @@ export interface StorageInfo {
   defaultPath: string
 }
 
+export type AppLanguage = 'en' | 'pt-BR'
+
+export interface AppSettings {
+  storagePath: string | null
+  minimizeToTray: boolean
+  hotSnippetsEnabled: boolean
+  language: AppLanguage
+}
+
+export interface HotSnippetTrayItem {
+  id: string
+  title: string
+  content: string
+}
+
+export const HOT_SNIPPETS_LIMIT = 10
+
 declare global {
   interface Window {
     electronAPI: {
@@ -111,10 +129,20 @@ declare global {
         setStoragePath: (newPath: string, data: unknown) => Promise<boolean>
         resetStoragePath: () => Promise<boolean>
         openFolder: (folderPath: string) => Promise<boolean>
+        getAppSettings: () => Promise<AppSettings>
+        setMinimizeToTray: (value: boolean) => Promise<boolean>
+        setHotSnippetsEnabled: (value: boolean) => Promise<boolean>
+        setLanguage: (value: AppLanguage) => Promise<boolean>
       }
       fileStorage: {
         load: () => Promise<unknown | null>
         save: (data: unknown) => Promise<boolean>
+      }
+      tray: {
+        updateHotSnippets: (items: HotSnippetTrayItem[]) => Promise<boolean>
+        onSnippetCopied: (callback: (payload: { snippetId: string }) => void) => void
+        onFocusSnippet: (callback: (payload: { snippetId: string }) => void) => void
+        removeListeners: () => void
       }
     }
   }

@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Joyride, { CallBackProps, ACTIONS, Step } from 'react-joyride'
 import { useOnboarding } from '../contexts/OnboardingContext'
 import { useDarkMode } from '../hooks/useDarkMode'
 
 const OnboardingTour: React.FC = () => {
+  const { t } = useTranslation()
   const { isDarkMode } = useDarkMode()
   const {
     isOnboardingActive,
@@ -192,7 +194,7 @@ const OnboardingTour: React.FC = () => {
             ))}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {index + 1} de {steps.length}
+            {t('onboarding.joyride.stepCounter', { current: index + 1, total: steps.length })}
           </div>
         </div>
       </div>
@@ -216,12 +218,12 @@ const OnboardingTour: React.FC = () => {
       spotlightPadding={8}
       styles={joyrideStyles}
       locale={{
-        back: '← Anterior',
-        close: 'Fechar',
-        last: isShowingDoubleClickTip ? 'Entendi! 👍' : 'Finalizar ✨',
-        next: 'Próximo →',
-        skip: 'Pular tutorial',
-        open: 'Abrir tutorial'
+        back: t('onboarding.joyride.back'),
+        close: t('onboarding.joyride.close'),
+        last: isShowingDoubleClickTip ? t('onboarding.joyride.lastDoubleClickTip') : t('onboarding.joyride.lastDefault'),
+        next: t('onboarding.joyride.next'),
+        skip: t('onboarding.joyride.skip'),
+        open: t('onboarding.joyride.open')
       }}
       floaterProps={{
         disableAnimation: false,

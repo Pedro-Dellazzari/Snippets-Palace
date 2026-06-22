@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import { useInlineCreation } from './useInlineCreation'
 import { SidebarSection, SidebarItem } from '../types/sidebar'
@@ -183,6 +184,7 @@ function buildProjectHierarchy(projects: ProjectItem[], folders: Folder[], count
 }
 
 export function useDynamicSidebar(): SidebarSection[] {
+  const { t } = useTranslation()
   const snippets = useStore(state => state.snippets)
   const folders = useStore(state => state.folders)
   const projectItems = useStore(state => state.projectItems)
@@ -205,26 +207,26 @@ export function useDynamicSidebar(): SidebarSection[] {
     const sidebarStructure = [
       {
         id: 'global-view',
-        title: 'VISUALIZAÇÃO GLOBAL',
+        title: t('sidebar.globalView'),
         collapsible: false,
         items: [
           {
             id: 'all-snippets',
-            label: 'Todos',
+            label: t('sidebar.all'),
             icon: 'document-text',
             count: counts.totalSnippets,
             type: 'favorite' as const
           },
           {
             id: 'favorites',
-            label: 'Favoritos',
+            label: t('sidebar.favorites'),
             icon: 'heart',
             count: counts.favorites,
             type: 'favorite' as const
           },
           {
             id: 'unassigned',
-            label: 'Sem marcação',
+            label: t('sidebar.unassigned'),
             icon: 'question-mark-circle',
             count: counts.unassigned,
             type: 'favorite' as const
@@ -233,13 +235,13 @@ export function useDynamicSidebar(): SidebarSection[] {
       },
       {
         id: 'folders',
-        title: 'FOLDERS',
+        title: t('sidebar.folders'),
         collapsible: true,
         items: [
           // Botão para criar nova pasta
           {
             id: 'add-folder',
-            label: '+ Nova pasta',
+            label: t('sidebar.addFolder'),
             icon: 'plus',
             type: 'folder' as const,
             isSpecial: true
@@ -250,7 +252,7 @@ export function useDynamicSidebar(): SidebarSection[] {
       },
       {
         id: 'languages',
-        title: 'LINGUAGENS',
+        title: t('sidebar.languages'),
         collapsible: true,
         items: uniqueLanguages.map(language => ({
           id: `language-${language.toLowerCase()}`,
@@ -263,13 +265,13 @@ export function useDynamicSidebar(): SidebarSection[] {
       },
       {
         id: 'projects',
-        title: 'PROJETOS',
+        title: t('sidebar.projects'),
         collapsible: true,
         items: [
           // Botão para criar novo projeto
           {
             id: 'add-project',
-            label: '+ Novo Projeto',
+            label: t('sidebar.addProject'),
             icon: 'plus',
             type: 'folder' as const,
             isSpecial: true
@@ -279,9 +281,9 @@ export function useDynamicSidebar(): SidebarSection[] {
         ]
       }
     ]
-    
+
     return sidebarStructure
-  }, [snippets, folders, projectItems, getSnippetCounts, creatingFolder, creatingProject])
+  }, [snippets, folders, projectItems, getSnippetCounts, creatingFolder, creatingProject, t])
 }
 
 // Função auxiliar para obter ícone específico por linguagem

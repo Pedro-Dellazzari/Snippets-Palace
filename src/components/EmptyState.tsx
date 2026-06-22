@@ -1,6 +1,7 @@
 import React from 'react'
-import { 
-  CodeBracketIcon, 
+import { useTranslation } from 'react-i18next'
+import {
+  CodeBracketIcon,
   PlusIcon
 } from '@heroicons/react/24/outline'
 
@@ -9,6 +10,7 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({ onCreateNew }) => {
+  const { t } = useTranslation()
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8">
@@ -17,11 +19,10 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onCreateNew }) => {
           <CodeBracketIcon className="w-12 h-12 text-blue-600 dark:text-blue-400" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-          Bem-vindo ao Snippets!
+          {t('emptyState.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
-          Organize, pesquise e reutilize seus códigos favoritos. 
-          Crie seu primeiro snippet para começar.
+          {t('emptyState.description')}
         </p>
       </div>
 
@@ -31,27 +32,27 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onCreateNew }) => {
           className="flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
         >
           <PlusIcon className="w-5 h-5" />
-          Criar Primeiro Snippet
+          {t('emptyState.createFirst')}
         </button>
       </div>
 
       <div className="mt-8 flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span>Salvamento automático</span>
+          <span>{t('emptyState.autoSave')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <span>Pesquisa inteligente</span>
+          <span>{t('emptyState.smartSearch')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-          <span>Organização por tags</span>
+          <span>{t('emptyState.tagOrganization')}</span>
         </div>
       </div>
 
       <div className="mt-6 text-xs text-gray-400 dark:text-gray-500">
-        Seus dados são salvos localmente e mantidos entre sessões
+        {t('emptyState.localData')}
       </div>
     </div>
   )

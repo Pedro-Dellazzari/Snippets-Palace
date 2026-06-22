@@ -1,9 +1,10 @@
 import React, { memo, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 import { HeartIcon } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
+import { HeartIcon as HeartIconSolid, BoltIcon as BoltIconSolid } from '@heroicons/react/24/solid'
 import { getLanguageColor, getTagColor } from '../utils/colors'
 import Tooltip from './Tooltip'
 import { Snippet, Folder, ProjectItem } from '../types'
@@ -24,11 +25,14 @@ interface SnippetCardProps {
   onDelete: (s: Snippet) => void
 }
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string, language: string, invalidDateLabel: string) {
   try {
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ptBR })
+    return formatDistanceToNow(new Date(dateString), {
+      addSuffix: true,
+      locale: language.startsWith('pt') ? ptBR : enUS
+    })
   } catch {
-    return 'Data inválida'
+    return invalidDateLabel
   }
 }
 
@@ -47,7 +51,11 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
   onToggleFavorite,
   onDelete
 }) => {
-  const formattedDate = useMemo(() => formatDate(snippet.updatedAt), [snippet.updatedAt])
+  const { t, i18n } = useTranslation()
+  const formattedDate = useMemo(
+    () => formatDate(snippet.updatedAt, i18n.language, t('common.invalidDate')),
+    [snippet.updatedAt, i18n.language, t]
+  )
   const languageColor = useMemo(() => getLanguageColor(snippet.language), [snippet.language])
   const visibleTags = useMemo(() => snippet.tags.slice(0, 2), [snippet.tags])
   const tagColors = useMemo(
@@ -77,12 +85,17 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
       style={{ transform }}
     >
       <div className="flex items-start justify-between mb-1">
-        <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate pr-2">
-          {snippet.title}
+        <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate pr-2 flex items-center gap-1.5 min-w-0">
+          {snippet.isHot && (
+            <Tooltip content={t('snippetCard.hotSnippetTooltip')}>
+              <BoltIconSolid className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+            </Tooltip>
+          )}
+          <span className="truncate">{snippet.title}</span>
         </h3>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <Tooltip content="Editar snippet">
+          <Tooltip content={t('snippetCard.editSnippet')}>
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(snippet) }}
               onDoubleClick={(e) => e.stopPropagation()}
@@ -94,7 +107,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
             </button>
           </Tooltip>
 
-          <Tooltip content={snippet.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}>
+          <Tooltip content={snippet.favorite ? t('snippetCard.removeFromFavorites') : t('snippetCard.addToFavorites')}>
             <button
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(snippet.id) }}
               onDoubleClick={(e) => e.stopPropagation()}
@@ -106,7 +119,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
             </button>
           </Tooltip>
 
-          <Tooltip content="Mover para pasta">
+          <Tooltip content={t('snippetCard.moveToFolder')}>
             <button
               onClick={(e) => { e.stopPropagation(); onContextMenu(e, snippet) }}
               onDoubleClick={(e) => e.stopPropagation()}
@@ -118,7 +131,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
             </button>
           </Tooltip>
 
-          <Tooltip content="Excluir snippet">
+          <Tooltip content={t('snippetCard.deleteSnippet')}>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(snippet) }}
               onDoubleClick={(e) => e.stopPropagation()}
@@ -229,7 +242,7 @@ const SnippetCard: React.FC<SnippetCardProps> = ({
               </svg>
             </div>
             <span className="drop-shadow-sm tracking-wide copy-text-slide" style={{ willChange: 'transform, opacity' }}>
-              Copiado!
+              {t('snippetCard.copied')}
             </span>
           </div>
         </div>

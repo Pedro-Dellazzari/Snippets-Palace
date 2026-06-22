@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import {
@@ -36,14 +37,15 @@ const FolderProjectContextMenu: React.FC<FolderProjectContextMenuProps> = ({
   onRename,
   onDelete
 }) => {
+  const { t } = useTranslation()
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Define menu items based on hierarchy rules
   const menuItems = [
     // Always allow creating subfolders
-    { 
-      id: 'add-subfolder', 
-      label: '➕ Nova subpasta...', 
+    {
+      id: 'add-subfolder',
+      label: t('folderProjectContextMenu.newSubfolder'),
       icon: FolderPlusIcon,
       action: () => onCreateSubfolder(itemId)
     },
@@ -54,15 +56,15 @@ const FolderProjectContextMenu: React.FC<FolderProjectContextMenuProps> = ({
     ] : [
       // Projects CANNOT contain subprojects - removed this option
     ]),
-    { 
-      id: 'rename', 
-      label: '✏️ Renomear', 
+    {
+      id: 'rename',
+      label: t('folderProjectContextMenu.rename'),
       icon: PencilIcon,
       action: () => onRename(itemId)
     },
-    { 
-      id: 'delete', 
-      label: '🗑️ Excluir', 
+    {
+      id: 'delete',
+      label: t('folderProjectContextMenu.delete'),
       icon: TrashIcon,
       action: () => onDelete(itemId),
       isDangerous: true
@@ -134,7 +136,7 @@ const FolderProjectContextMenu: React.FC<FolderProjectContextMenuProps> = ({
       style={getMenuPosition()}
     >
       <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 mb-1">
-        {itemType === 'folder' ? 'Pasta' : 'Projeto'}: {itemName}
+        {itemType === 'folder' ? t('folderProjectContextMenu.folder') : t('folderProjectContextMenu.project')}: {itemName}
       </div>
       
       {menuItems.map((item) => {

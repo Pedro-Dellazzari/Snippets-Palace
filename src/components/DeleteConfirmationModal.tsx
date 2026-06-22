@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 
 interface DeleteConfirmationModalProps {
@@ -18,7 +19,8 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   itemName,
   snippetCount
 }) => {
-  const { 
+  const { t } = useTranslation()
+  const {
     forceDeleteFolder, 
     forceDeleteProjectItem, 
     updateSnippet, 
@@ -97,20 +99,24 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Excluir {type === 'folder' ? 'pasta' : 'projeto'}
+              {type === 'folder' ? t('deleteConfirmationModal.deleteFolder') : t('deleteConfirmationModal.deleteProject')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Esta ação não pode ser desfeita
+              {t('deleteConfirmationModal.irreversible')}
             </p>
           </div>
         </div>
 
         <div className="mb-6">
           <p className="text-gray-700 dark:text-gray-300 mb-2">
-            A {type === 'folder' ? 'pasta' : 'projeto'} <span className="font-medium">"{itemName}"</span> contém {snippetCount} snippet{snippetCount !== 1 ? 's' : ''}.
+            {t('deleteConfirmationModal.containsSnippets', {
+              type: type === 'folder' ? t('deleteConfirmationModal.folder') : t('deleteConfirmationModal.project'),
+              name: itemName,
+              count: snippetCount
+            })}
           </p>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
-            O que você gostaria de fazer com {snippetCount === 1 ? 'esse snippet' : 'esses snippets'}?
+            {snippetCount === 1 ? t('deleteConfirmationModal.whatToDoSingular') : t('deleteConfirmationModal.whatToDoPlural')}
           </p>
         </div>
 
@@ -122,9 +128,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Manter snippets sem {type === 'folder' ? 'pasta' : 'projeto'}
+            {type === 'folder' ? t('deleteConfirmationModal.keepWithoutFolder') : t('deleteConfirmationModal.keepWithoutProject')}
           </button>
-          
+
           <button
             onClick={handleDeleteAll}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
@@ -132,14 +138,14 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            Deletar tudo
+            {t('deleteConfirmationModal.deleteAll')}
           </button>
-          
+
           <button
             onClick={onClose}
             className="px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
           >
-            Cancelar
+            {t('deleteConfirmationModal.cancel')}
           </button>
         </div>
       </div>

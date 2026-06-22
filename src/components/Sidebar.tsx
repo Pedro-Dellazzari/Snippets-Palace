@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSidebarState } from '../hooks/useSidebarState'
 import { useDynamicSidebar } from '../hooks/useDynamicSidebar'
 import { useStore } from '../store/useStore'
@@ -6,6 +7,7 @@ import SidebarSection from './SidebarSection'
 import DeleteConfirmationModal from './DeleteConfirmationModal'
 
 const Sidebar: React.FC = () => {
+  const { t } = useTranslation()
   const {
     expandedFolders,
     toggleSection,
@@ -144,7 +146,7 @@ const Sidebar: React.FC = () => {
       {/* Footer */}
       <div className="px-6 py-3 border-t border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/50">
         <div className="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
-          <span>{snippetsCount} snippets</span>
+          <span>{t('sidebar.snippetsCount', { count: snippetsCount })}</span>
         </div>
       </div>
 

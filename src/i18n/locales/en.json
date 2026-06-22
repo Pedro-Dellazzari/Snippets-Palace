@@ -1,0 +1,309 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create",
+    "close": "Close",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "rename": "Rename",
+    "loading": "Loading...",
+    "loadingEditor": "Loading editor...",
+    "invalidDate": "Invalid date",
+    "none": "None (root)"
+  },
+  "emptyState": {
+    "title": "Welcome to Snippets!",
+    "description": "Organize, search, and reuse your favorite code. Create your first snippet to get started.",
+    "createFirst": "Create First Snippet",
+    "autoSave": "Auto-save",
+    "smartSearch": "Smart search",
+    "tagOrganization": "Tag organization",
+    "localData": "Your data is saved locally and kept between sessions"
+  },
+  "searchBar": {
+    "placeholder": "Search snippets...",
+    "ticketHistory": "JIRA Ticket History",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "newSnippet": "New Snippet",
+    "createNewSnippet": "Create new snippet"
+  },
+  "settings": {
+    "title": "Settings",
+    "storage": {
+      "heading": "Storage",
+      "desktopOnly": "Storage configuration is only available in the desktop app.",
+      "customPath": "Custom location",
+      "defaultPath": "Default location",
+      "customBadge": "Custom",
+      "fileLabel": "File:",
+      "localStorageNote": "Data saved in the app's internal storage (localStorage).",
+      "openFolder": "Open folder",
+      "changeFolder": "Change location",
+      "changing": "Changing...",
+      "restoreDefault": "Restore default",
+      "restoring": "Restoring...",
+      "snippetCountInfo_one": "{{count}} snippet stored. Changing the location will copy all data to the new folder.",
+      "snippetCountInfo_other": "{{count}} snippets stored. Changing the location will copy all data to the new folder.",
+      "errorLoadInfo": "Error loading storage information.",
+      "errorChangeFolder": "Error changing storage location.",
+      "errorResetDefault": "Error restoring default location.",
+      "successChangeFolder": "Storage location changed successfully! Data has been migrated to the new folder.",
+      "successResetDefault": "Storage restored to default location."
+    },
+    "tray": {
+      "heading": "System Tray",
+      "minimizeLabel": "Keep Snippet Palace in the tray when closing the window",
+      "minimizeDescription": "Closing the window hides the app in the tray instead of quitting.",
+      "hotSnippetsLabel": "Enable Hot Snippets",
+      "hotSnippetsDescription": "Quick access to favorite snippets from the tray (max. 10).",
+      "errorMinimize": "Error updating tray setting.",
+      "errorHotSnippets": "Error updating Hot Snippets."
+    },
+    "layout": {
+      "heading": "Layout",
+      "description": "Restore panel widths (sidebar, list, and detail) to their default values.",
+      "resetButton": "Restore default layout",
+      "errorReset": "Error restoring layout."
+    },
+    "language": {
+      "heading": "Language",
+      "description": "Choose the app interface language.",
+      "portuguese": "Português",
+      "english": "English"
+    }
+  },
+  "newSnippetModal": {
+    "editTitle": "✏️ Edit Snippet",
+    "createTitle": "✨ New Snippet",
+    "editSubtitle": "Modify your snippet as needed",
+    "createSubtitle": "Create and organize your code with ease",
+    "titleLabel": "📝 Title *",
+    "titlePlaceholder": "E.g.: Remove Duplicates SQL, API Rate Limiter...",
+    "languageLabel": "🎯 Language *",
+    "languagePlaceholder": "JavaScript, Python...",
+    "tagsLabel": "🏷️ Tags",
+    "tagsPlaceholder": "database, cleanup...",
+    "contentLabel": "💻 Code *",
+    "shortcutHintPrefix": "💡 Tip: Use ",
+    "shortcutHintSuffix": " to save",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "createSnippet": "Create Snippet",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "errorTitleRequired": "Title is required",
+    "errorContentRequired": "Code is required",
+    "errorLanguageRequired": "Language is required",
+    "errorFillRequired": "Please fill in all required fields",
+    "errorGeneric": "Error creating snippet. Please try again.",
+    "successUpdated": "Snippet updated successfully!",
+    "successCreated": "Snippet created successfully!"
+  },
+  "deleteConfirmationModal": {
+    "deleteFolder": "Delete folder",
+    "deleteProject": "Delete project",
+    "irreversible": "This action cannot be undone",
+    "containsSnippets_one": "The {{type}} \"{{name}}\" contains {{count}} snippet.",
+    "containsSnippets_other": "The {{type}} \"{{name}}\" contains {{count}} snippets.",
+    "whatToDoSingular": "What would you like to do with that snippet?",
+    "whatToDoPlural": "What would you like to do with those snippets?",
+    "keepWithoutFolder": "Keep snippets without a folder",
+    "keepWithoutProject": "Keep snippets without a project",
+    "deleteAll": "Delete everything",
+    "cancel": "Cancel",
+    "folder": "folder",
+    "project": "project"
+  },
+  "snippetDetail": {
+    "selectSnippet": "Select a snippet",
+    "selectSnippetDescription": "Choose a snippet from the list to view its content and details here.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "removeFromTray": "Remove from tray",
+    "addToTray": "Add to tray (Hot Snippet)",
+    "removeFromFavorites": "Remove from favorites",
+    "addToFavorites": "Add to favorites",
+    "editSnippet": "Edit snippet",
+    "deleteSnippet": "Delete snippet",
+    "copied": "Copied!",
+    "copy": "Copy",
+    "languageLabel": "Language",
+    "tagsLabel": "Tags (comma-separated)",
+    "titlePlaceholder": "Snippet title",
+    "descriptionPlaceholder": "Snippet description",
+    "languagePlaceholder": "E.g.: SQL, Python...",
+    "tagsPlaceholder": "E.g.: database, cleanup, performance",
+    "lastUpdated": "Last updated: {{date}}",
+    "copyCount": "Number of times copied",
+    "defaultProjectLabel": "Project",
+    "hotLimitReached": "Limit of 10 Hot Snippets reached. Unmark one first.",
+    "deleteConfirmTitle": "Delete snippet?",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+    "errorTitleRequired": "Title is required",
+    "errorContentRequired": "Code is required",
+    "errorLanguageRequired": "Language is required"
+  },
+  "folderProjectModal": {
+    "editFolder": "Edit Folder",
+    "editProject": "Edit Project",
+    "newFolder": "New Folder",
+    "newProject": "New Project",
+    "nameLabel": "Name",
+    "namePlaceholderFolder": "Folder name",
+    "namePlaceholderProject": "Project name",
+    "errorNameRequired": "Name is required",
+    "parentFolderLabel": "Parent folder",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Project description",
+    "cancel": "Cancel",
+    "save": "Save",
+    "create": "Create"
+  },
+  "snippetCard": {
+    "hotSnippetTooltip": "Hot Snippet — available in the tray",
+    "editSnippet": "Edit snippet",
+    "removeFromFavorites": "Remove from favorites",
+    "addToFavorites": "Add to favorites",
+    "moveToFolder": "Move to folder",
+    "deleteSnippet": "Delete snippet",
+    "copied": "Copied!"
+  },
+  "snippetList": {
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "favorites": "Favorites",
+      "language": "By language",
+      "mostUsed": "Most used"
+    },
+    "noResults": "No results found",
+    "noSnippetsInCategory": "No snippets in the selected category",
+    "searchResults": "Results ({{count}})",
+    "allSnippets": "📄 All Snippets",
+    "favoritesContext": "❤️ Favorites",
+    "unassignedContext": "🕳️ Unassigned",
+    "snippetsLabel": "Snippets",
+    "folder": "Folder",
+    "project": "Project",
+    "deleteSnippet": "Delete snippet",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "sidebar": {
+    "globalView": "GLOBAL VIEW",
+    "all": "All",
+    "favorites": "Favorites",
+    "unassigned": "Unassigned",
+    "folders": "FOLDERS",
+    "addFolder": "+ New folder",
+    "languages": "LANGUAGES",
+    "projects": "PROJECTS",
+    "addProject": "+ New Project",
+    "snippetsCount": "{{count}} snippets",
+    "folderNamePlaceholder": "Folder name...",
+    "projectNamePlaceholder": "Project name..."
+  },
+  "contextMenu": {
+    "moveToFolder": "Move to folder...",
+    "moveToProject": "Move to project...",
+    "noFolder": "No folder",
+    "noProject": "No project"
+  },
+  "folderProjectContextMenu": {
+    "newSubfolder": "➕ New subfolder...",
+    "rename": "✏️ Rename",
+    "delete": "🗑️ Delete",
+    "folder": "Folder",
+    "project": "Project"
+  },
+  "ticketLogModal": {
+    "title": "JIRA Ticket History",
+    "newRecord": "New Record",
+    "editRecord": "Edit Record",
+    "recordsCount_one": "{{count}} record",
+    "recordsCount_other": "{{count}} records",
+    "filterPlaceholder": "Filter by ticket number or description...",
+    "noRecordsYet": "No records yet",
+    "noFilterResults": "No results for this filter",
+    "noRecordsHint": "Log snippets that resolved JIRA tickets to find them quickly later.",
+    "snippetLabel": "Snippet:",
+    "openTicket": "Open ticket",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "ticketNumberLabel": "Ticket Number",
+    "ticketNumberPlaceholder": "E.g.: PROJ-1234",
+    "optional": "(optional)",
+    "ticketUrlLabel": "Ticket URL",
+    "ticketUrlPlaceholder": "https://jira.example.com/browse/PROJ-1234",
+    "problemDescriptionLabel": "Problem Description",
+    "problemDescriptionPlaceholder": "Describe the problem this snippet solved...",
+    "linkedSnippetLabel": "Linked Snippet",
+    "noLinkedSnippet": "— No linked snippet —",
+    "createRecord": "Create Record",
+    "saveChanges": "Save Changes",
+    "errorTicketNumberRequired": "Ticket number is required",
+    "errorProblemDescriptionRequired": "Problem description is required"
+  },
+  "onboarding": {
+    "steps": {
+      "allSnippets": {
+        "title": "📄 All Snippets",
+        "content": "Here you'll find all your saved snippets, regardless of folder, project, or language. It's your central point to access all your content."
+      },
+      "favorites": {
+        "title": "❤️ Favorites",
+        "content": "Click here to see only your favorite snippets. Mark a snippet as a favorite by clicking the heart icon."
+      },
+      "newSnippet": {
+        "title": "✨ Create New Snippet",
+        "content": "Click here to add a new snippet. You can set a title, language, tags, and more. Use Ctrl+N as a shortcut."
+      },
+      "quickCopy": {
+        "title": "⚡ Quick Copy",
+        "content": "Double-click any snippet to automatically copy it to your clipboard with visual feedback."
+      },
+      "folders": {
+        "title": "📁 Folders",
+        "content": "Organize your snippets into folders to keep everything organized by context or category. You can create folder hierarchies."
+      },
+      "projects": {
+        "title": "🚀 Projects",
+        "content": "Manage your projects and organize snippets by work context. Ideal for separating code from different applications."
+      },
+      "search": {
+        "title": "🔍 Smart Search",
+        "content": "Use search to find snippets by title, content, tags, or language. Search is smart and real-time."
+      }
+    },
+    "doubleClickTip": {
+      "copyTitle": "⚡ Tip: Copy with Double-Click",
+      "copyContent": "Congrats on your first snippet! 🎉 Quick tip: Double-click any snippet to automatically copy it to your clipboard.",
+      "organizeTitle": "📁 Tip: Organize Snippets",
+      "organizeContent": "Right-click any snippet to access organization options, like moving it to folders and projects."
+    },
+    "joyride": {
+      "back": "← Back",
+      "close": "Close",
+      "lastDoubleClickTip": "Got it! 👍",
+      "lastDefault": "Finish ✨",
+      "next": "Next →",
+      "skip": "Skip tutorial",
+      "open": "Open tutorial",
+      "stepCounter": "{{current}} of {{total}}"
+    }
+  },
+  "tutorialTrigger": {
+    "reviewTutorial": "📘 Review tutorial",
+    "reviewTutorialPlain": "Review tutorial"
+  },
+  "snippets": {
+    "copyOf": "Copy of {{title}}"
+  }
+}

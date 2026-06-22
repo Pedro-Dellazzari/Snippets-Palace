@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
+import i18n from './i18n'
 import { useStore } from './store/useStore'
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext'
 import Sidebar from './components/Sidebar'
@@ -25,6 +26,23 @@ function AppContent() {
   useEffect(() => {
     loadPersistedData()
   }, [loadPersistedData])
+
+  useEffect(() => {
+    if (!window.electronAPI?.settings) return
+    window.electronAPI.settings.getAppSettings().then(settings => {
+      i18n.changeLanguage(settings.language)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!window.electronAPI?.tray) return
+    window.electronAPI.tray.onSnippetCopied(({ snippetId }) => {
+      useStore.getState().incrementUsageCount(snippetId)
+    })
+    return () => {
+      window.electronAPI.tray.removeListeners()
+    }
+  }, [])
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">

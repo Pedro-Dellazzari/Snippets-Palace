@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { XMarkIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
 import { Snippet } from '../types'
@@ -17,6 +18,7 @@ interface NewSnippetModalProps {
 }
 
 const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, editSnippet }) => {
+  const { t } = useTranslation()
   const addSnippet = useStore(state => state.addSnippet)
   const updateSnippet = useStore(state => state.updateSnippet)
   const snippets = useStore(state => state.snippets)
@@ -104,15 +106,15 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
     const newErrors: Record<string, string> = {}
     
     if (!formData.title.trim()) {
-      newErrors.title = 'Título é obrigatório'
+      newErrors.title = t('newSnippetModal.errorTitleRequired')
     }
-    
+
     if (!formData.content.trim()) {
-      newErrors.content = 'Código é obrigatório'
+      newErrors.content = t('newSnippetModal.errorContentRequired')
     }
-    
+
     if (!formData.language.trim()) {
-      newErrors.language = 'Linguagem é obrigatória'
+      newErrors.language = t('newSnippetModal.errorLanguageRequired')
     }
     
     setErrors(newErrors)
@@ -125,7 +127,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
     if (isSubmitting) return
     
     if (!validateForm()) {
-      error('Por favor, preencha todos os campos obrigatórios')
+      error(t('newSnippetModal.errorFillRequired'))
       return
     }
     
@@ -151,7 +153,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
           folderId: editSnippet.folderId,
           projectId: editSnippet.projectId
         })
-        success('Snippet atualizado com sucesso!')
+        success(t('newSnippetModal.successUpdated'))
       } else {
         // Create new snippet without folder/project or description
         const newSnippet: Snippet = {
@@ -171,7 +173,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
         addSnippet(newSnippet)
 
         // Show success message
-        success('Snippet criado com sucesso!')
+        success(t('newSnippetModal.successCreated'))
 
         // If this is the first snippet and user hasn't seen the double-click tip, show it
         if (snippets.length === 0 && !hasSeenDoubleClickTip) {
@@ -187,7 +189,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
       }, 500)
       
     } catch (err) {
-      error('Erro ao criar snippet. Tente novamente.')
+      error(t('newSnippetModal.errorGeneric'))
     } finally {
       setIsSubmitting(false)
     }
@@ -252,10 +254,10 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {editSnippet ? '✏️ Editar Snippet' : '✨ Novo Snippet'}
+                {editSnippet ? t('newSnippetModal.editTitle') : t('newSnippetModal.createTitle')}
               </h2>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {editSnippet ? 'Modifique seu snippet conforme necessário' : 'Crie e organize seu código com facilidade'}
+                {editSnippet ? t('newSnippetModal.editSubtitle') : t('newSnippetModal.createSubtitle')}
               </p>
             </div>
             <button
@@ -273,7 +275,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
               {/* Title */}
               <div>
                 <label htmlFor="title" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  📝 Título *
+                  {t('newSnippetModal.titleLabel')}
                 </label>
                 <input
                   ref={titleInputRef}
@@ -285,7 +287,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
                     'w-full px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 text-base font-medium',
                     errors.title ? 'border-red-500 ring-red-200' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   )}
-                  placeholder="Ex: Remove Duplicates SQL, API Rate Limiter..."
+                  placeholder={t('newSnippetModal.titlePlaceholder')}
                   disabled={isSubmitting}
                 />
                 {errors.title && (
@@ -300,19 +302,19 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="language" className="block text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1.5">
-                    🎯 Linguagem *
+                    {t('newSnippetModal.languageLabel')}
                   </label>
                   <LanguageAutocomplete
                     value={formData.language}
                     onChange={(value) => handleInputChange('language', value)}
                     error={errors.language}
-                    placeholder="JavaScript, Python..."
+                    placeholder={t('newSnippetModal.languagePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="tags" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                    🏷️ Tags
+                    {t('newSnippetModal.tagsLabel')}
                   </label>
                   <input
                     id="tags"
@@ -320,7 +322,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
                     value={formData.tags}
                     onChange={(e) => handleInputChange('tags', e.target.value)}
                     className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 text-sm"
-                    placeholder="database, cleanup..."
+                    placeholder={t('newSnippetModal.tagsPlaceholder')}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -351,7 +353,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
               {/* Code Editor */}
               <div className="flex-1 flex flex-col">
                 <label htmlFor="content" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  💻 Código *
+                  {t('newSnippetModal.contentLabel')}
                 </label>
                 <div
                   className={clsx(
@@ -401,7 +403,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
                       <div className="flex items-center justify-center h-full text-gray-500">
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                          <p>Carregando editor...</p>
+                          <p>{t('common.loadingEditor')}</p>
                         </div>
                       </div>
                     }
@@ -419,11 +421,11 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
             {/* Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                <span className="hidden sm:inline">💡 Dica: Use </span>
+                <span className="hidden sm:inline">{t('newSnippetModal.shortcutHintPrefix')}</span>
                 <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono">Ctrl + Enter</kbd>
-                <span className="hidden sm:inline"> para salvar</span>
+                <span className="hidden sm:inline">{t('newSnippetModal.shortcutHintSuffix')}</span>
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -432,7 +434,7 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
                   className="flex items-center gap-1.5 px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   <XMarkIcon className="h-4 w-4" />
-                  Cancelar
+                  {t('newSnippetModal.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -447,12 +449,12 @@ const NewSnippetModal: React.FC<NewSnippetModalProps> = ({ isOpen, onClose, edit
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      {editSnippet ? 'Salvando...' : 'Criando...'}
+                      {editSnippet ? t('newSnippetModal.saving') : t('newSnippetModal.creating')}
                     </>
                   ) : (
                     <>
                       <DocumentDuplicateIcon className="h-4 w-4" />
-                      {editSnippet ? 'Salvar Alterações' : 'Criar Snippet'}
+                      {editSnippet ? t('newSnippetModal.saveChanges') : t('newSnippetModal.createSnippet')}
                     </>
                   )}
                 </button>

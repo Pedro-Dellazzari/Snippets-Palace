@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import {
@@ -82,6 +83,7 @@ const CascadingSubmenu: React.FC<CascadingSubmenuProps> = ({
   position,
   level = 0
 }) => {
+  const { t } = useTranslation()
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null)
   const [childSubmenuPosition, setChildSubmenuPosition] = useState<{ x: number; y: number } | null>(null)
   const submenuRef = useRef<HTMLDivElement>(null)
@@ -198,7 +200,7 @@ const CascadingSubmenu: React.FC<CascadingSubmenuProps> = ({
             }}
           >
             <div className="h-4 w-4 flex-shrink-0" />
-            <span className="flex-1">{type === 'folder' ? 'Nenhuma pasta' : 'Nenhum projeto'}</span>
+            <span className="flex-1">{type === 'folder' ? t('contextMenu.noFolder') : t('contextMenu.noProject')}</span>
             {!currentId && (
               <CheckIcon className="h-4 w-4 text-blue-500" />
             )}
@@ -268,14 +270,15 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   onMoveToFolder,
   onMoveToProject
 }) => {
+  const { t } = useTranslation()
   const [showSubmenu, setShowSubmenu] = useState(false)
   const [submenuType, setSubmenuType] = useState<'folder' | 'project' | null>(null)
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const menuItems = [
-    { id: 'move-folder', label: 'Mover para pasta...', icon: FolderIcon, hasSubmenu: true },
-    { id: 'move-project', label: 'Mover para projeto...', icon: RocketLaunchIcon, hasSubmenu: true }
+    { id: 'move-folder', label: t('contextMenu.moveToFolder'), icon: FolderIcon, hasSubmenu: true },
+    { id: 'move-project', label: t('contextMenu.moveToProject'), icon: RocketLaunchIcon, hasSubmenu: true }
   ]
 
   // Build hierarchical structures

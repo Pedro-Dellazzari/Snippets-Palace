@@ -1,0 +1,309 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "create": "Criar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "rename": "Renomear",
+    "loading": "Carregando...",
+    "loadingEditor": "Carregando editor...",
+    "invalidDate": "Data inválida",
+    "none": "Nenhum (raiz)"
+  },
+  "emptyState": {
+    "title": "Bem-vindo ao Snippets!",
+    "description": "Organize, pesquise e reutilize seus códigos favoritos. Crie seu primeiro snippet para começar.",
+    "createFirst": "Criar Primeiro Snippet",
+    "autoSave": "Salvamento automático",
+    "smartSearch": "Pesquisa inteligente",
+    "tagOrganization": "Organização por tags",
+    "localData": "Seus dados são salvos localmente e mantidos entre sessões"
+  },
+  "searchBar": {
+    "placeholder": "Pesquisar snippets...",
+    "ticketHistory": "Histórico de Tickets JIRA",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo escuro",
+    "newSnippet": "Novo Snippet",
+    "createNewSnippet": "Criar novo snippet"
+  },
+  "settings": {
+    "title": "Configurações",
+    "storage": {
+      "heading": "Armazenamento",
+      "desktopOnly": "Configuração de armazenamento disponível apenas no aplicativo desktop.",
+      "customPath": "Local personalizado",
+      "defaultPath": "Local padrão",
+      "customBadge": "Personalizado",
+      "fileLabel": "Arquivo:",
+      "localStorageNote": "Dados salvos no armazenamento interno do aplicativo (localStorage).",
+      "openFolder": "Abrir pasta",
+      "changeFolder": "Mudar local",
+      "changing": "Alterando...",
+      "restoreDefault": "Restaurar padrão",
+      "restoring": "Restaurando...",
+      "snippetCountInfo_one": "{{count}} snippet armazenado. Ao mudar o local, todos os dados serão copiados para a nova pasta.",
+      "snippetCountInfo_other": "{{count}} snippets armazenados. Ao mudar o local, todos os dados serão copiados para a nova pasta.",
+      "errorLoadInfo": "Erro ao carregar informações de armazenamento.",
+      "errorChangeFolder": "Erro ao alterar o local de armazenamento.",
+      "errorResetDefault": "Erro ao restaurar o local padrão.",
+      "successChangeFolder": "Local de armazenamento alterado com sucesso! Os dados foram migrados para a nova pasta.",
+      "successResetDefault": "Armazenamento restaurado para o local padrão."
+    },
+    "tray": {
+      "heading": "Bandeja do Sistema",
+      "minimizeLabel": "Manter Snippet Palace na bandeja ao fechar a janela",
+      "minimizeDescription": "Fechar a janela esconde o app na bandeja em vez de encerrar.",
+      "hotSnippetsLabel": "Habilitar Hot Snippets",
+      "hotSnippetsDescription": "Acesso rápido aos snippets favoritos pela bandeja (máx. 10).",
+      "errorMinimize": "Erro ao atualizar configuração de bandeja.",
+      "errorHotSnippets": "Erro ao atualizar Hot Snippets."
+    },
+    "layout": {
+      "heading": "Layout",
+      "description": "Restaurar as larguras dos painéis (sidebar, lista e detalhe) para os valores padrão.",
+      "resetButton": "Restaurar layout padrão",
+      "errorReset": "Erro ao restaurar o layout."
+    },
+    "language": {
+      "heading": "Idioma",
+      "description": "Escolha o idioma da interface do aplicativo.",
+      "portuguese": "Português",
+      "english": "English"
+    }
+  },
+  "newSnippetModal": {
+    "editTitle": "✏️ Editar Snippet",
+    "createTitle": "✨ Novo Snippet",
+    "editSubtitle": "Modifique seu snippet conforme necessário",
+    "createSubtitle": "Crie e organize seu código com facilidade",
+    "titleLabel": "📝 Título *",
+    "titlePlaceholder": "Ex: Remove Duplicates SQL, API Rate Limiter...",
+    "languageLabel": "🎯 Linguagem *",
+    "languagePlaceholder": "JavaScript, Python...",
+    "tagsLabel": "🏷️ Tags",
+    "tagsPlaceholder": "database, cleanup...",
+    "contentLabel": "💻 Código *",
+    "shortcutHintPrefix": "💡 Dica: Use ",
+    "shortcutHintSuffix": " para salvar",
+    "cancel": "Cancelar",
+    "saveChanges": "Salvar Alterações",
+    "createSnippet": "Criar Snippet",
+    "saving": "Salvando...",
+    "creating": "Criando...",
+    "errorTitleRequired": "Título é obrigatório",
+    "errorContentRequired": "Código é obrigatório",
+    "errorLanguageRequired": "Linguagem é obrigatória",
+    "errorFillRequired": "Por favor, preencha todos os campos obrigatórios",
+    "errorGeneric": "Erro ao criar snippet. Tente novamente.",
+    "successUpdated": "Snippet atualizado com sucesso!",
+    "successCreated": "Snippet criado com sucesso!"
+  },
+  "deleteConfirmationModal": {
+    "deleteFolder": "Excluir pasta",
+    "deleteProject": "Excluir projeto",
+    "irreversible": "Esta ação não pode ser desfeita",
+    "containsSnippets_one": "A {{type}} \"{{name}}\" contém {{count}} snippet.",
+    "containsSnippets_other": "A {{type}} \"{{name}}\" contém {{count}} snippets.",
+    "whatToDoSingular": "O que você gostaria de fazer com esse snippet?",
+    "whatToDoPlural": "O que você gostaria de fazer com esses snippets?",
+    "keepWithoutFolder": "Manter snippets sem pasta",
+    "keepWithoutProject": "Manter snippets sem projeto",
+    "deleteAll": "Deletar tudo",
+    "cancel": "Cancelar",
+    "folder": "pasta",
+    "project": "projeto"
+  },
+  "snippetDetail": {
+    "selectSnippet": "Selecione um snippet",
+    "selectSnippetDescription": "Escolha um snippet da lista para visualizar seu conteúdo e detalhes aqui.",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "removeFromTray": "Remover da bandeja",
+    "addToTray": "Adicionar à bandeja (Hot Snippet)",
+    "removeFromFavorites": "Remover dos favoritos",
+    "addToFavorites": "Adicionar aos favoritos",
+    "editSnippet": "Editar snippet",
+    "deleteSnippet": "Excluir snippet",
+    "copied": "Copiado!",
+    "copy": "Copiar",
+    "languageLabel": "Linguagem",
+    "tagsLabel": "Tags (separadas por vírgula)",
+    "titlePlaceholder": "Título do snippet",
+    "descriptionPlaceholder": "Descrição do snippet",
+    "languagePlaceholder": "Ex: SQL, Python...",
+    "tagsPlaceholder": "Ex: database, cleanup, performance",
+    "lastUpdated": "Última atualização: {{date}}",
+    "copyCount": "Número de vezes copiado",
+    "defaultProjectLabel": "Projeto",
+    "hotLimitReached": "Limite de 10 Hot Snippets atingido. Desmarque um antes.",
+    "deleteConfirmTitle": "Excluir snippet?",
+    "deleteConfirmMessage": "Tem certeza que deseja excluir \"{{title}}\"? Esta ação não pode ser desfeita.",
+    "errorTitleRequired": "Título é obrigatório",
+    "errorContentRequired": "Código é obrigatório",
+    "errorLanguageRequired": "Linguagem é obrigatória"
+  },
+  "folderProjectModal": {
+    "editFolder": "Editar Pasta",
+    "editProject": "Editar Projeto",
+    "newFolder": "Nova Pasta",
+    "newProject": "Novo Projeto",
+    "nameLabel": "Nome",
+    "namePlaceholderFolder": "Nome da pasta",
+    "namePlaceholderProject": "Nome do projeto",
+    "errorNameRequired": "Nome é obrigatório",
+    "parentFolderLabel": "Pasta pai",
+    "descriptionLabel": "Descrição (opcional)",
+    "descriptionPlaceholder": "Descrição do projeto",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "create": "Criar"
+  },
+  "snippetCard": {
+    "hotSnippetTooltip": "Hot Snippet — disponível na bandeja",
+    "editSnippet": "Editar snippet",
+    "removeFromFavorites": "Remover dos favoritos",
+    "addToFavorites": "Adicionar aos favoritos",
+    "moveToFolder": "Mover para pasta",
+    "deleteSnippet": "Excluir snippet",
+    "copied": "Copiado!"
+  },
+  "snippetList": {
+    "sort": {
+      "newest": "Mais recentes",
+      "oldest": "Mais antigos",
+      "favorites": "Favoritos",
+      "language": "Por linguagem",
+      "mostUsed": "Mais usados"
+    },
+    "noResults": "Nenhum resultado encontrado",
+    "noSnippetsInCategory": "Nenhum snippet na categoria selecionada",
+    "searchResults": "Resultados ({{count}})",
+    "allSnippets": "📄 Todos os Snippets",
+    "favoritesContext": "❤️ Favoritos",
+    "unassignedContext": "🕳️ Sem marcação",
+    "snippetsLabel": "Snippets",
+    "folder": "Pasta",
+    "project": "Projeto",
+    "deleteSnippet": "Excluir snippet",
+    "deleteConfirmMessage": "Tem certeza que deseja excluir \"{{title}}\"? Esta ação não pode ser desfeita.",
+    "cancel": "Cancelar",
+    "delete": "Excluir"
+  },
+  "sidebar": {
+    "globalView": "VISUALIZAÇÃO GLOBAL",
+    "all": "Todos",
+    "favorites": "Favoritos",
+    "unassigned": "Sem marcação",
+    "folders": "FOLDERS",
+    "addFolder": "+ Nova pasta",
+    "languages": "LINGUAGENS",
+    "projects": "PROJETOS",
+    "addProject": "+ Novo Projeto",
+    "snippetsCount": "{{count}} snippets",
+    "folderNamePlaceholder": "Nome da pasta...",
+    "projectNamePlaceholder": "Nome do projeto..."
+  },
+  "contextMenu": {
+    "moveToFolder": "Mover para pasta...",
+    "moveToProject": "Mover para projeto...",
+    "noFolder": "Nenhuma pasta",
+    "noProject": "Nenhum projeto"
+  },
+  "folderProjectContextMenu": {
+    "newSubfolder": "➕ Nova subpasta...",
+    "rename": "✏️ Renomear",
+    "delete": "🗑️ Excluir",
+    "folder": "Pasta",
+    "project": "Projeto"
+  },
+  "ticketLogModal": {
+    "title": "Histórico de Tickets JIRA",
+    "newRecord": "Novo Registro",
+    "editRecord": "Editar Registro",
+    "recordsCount_one": "{{count}} registro",
+    "recordsCount_other": "{{count}} registros",
+    "filterPlaceholder": "Filtrar por número do ticket ou descrição...",
+    "noRecordsYet": "Nenhum registro ainda",
+    "noFilterResults": "Nenhum resultado para o filtro",
+    "noRecordsHint": "Registre snippets que resolveram tickets JIRA para encontrá-los rapidamente depois.",
+    "snippetLabel": "Snippet:",
+    "openTicket": "Abrir ticket",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "ticketNumberLabel": "Número do Ticket",
+    "ticketNumberPlaceholder": "Ex: PROJ-1234",
+    "optional": "(opcional)",
+    "ticketUrlLabel": "URL do Ticket",
+    "ticketUrlPlaceholder": "https://jira.exemplo.com/browse/PROJ-1234",
+    "problemDescriptionLabel": "Descrição do Problema",
+    "problemDescriptionPlaceholder": "Descreva o problema que este snippet resolveu...",
+    "linkedSnippetLabel": "Snippet Vinculado",
+    "noLinkedSnippet": "— Sem snippet vinculado —",
+    "createRecord": "Criar Registro",
+    "saveChanges": "Salvar Alterações",
+    "errorTicketNumberRequired": "Número do ticket é obrigatório",
+    "errorProblemDescriptionRequired": "Descrição do problema é obrigatória"
+  },
+  "onboarding": {
+    "steps": {
+      "allSnippets": {
+        "title": "📄 Todos os Snippets",
+        "content": "Aqui você encontra todos os snippets salvos, independente da pasta, projeto ou linguagem. É o seu ponto central para acessar todo o conteúdo."
+      },
+      "favorites": {
+        "title": "❤️ Favoritos",
+        "content": "Clique aqui para ver apenas seus snippets favoritos. Marque um snippet como favorito clicando no ícone de coração."
+      },
+      "newSnippet": {
+        "title": "✨ Criar Novo Snippet",
+        "content": "Clique aqui para adicionar um novo snippet. Você pode definir título, linguagem, tags e muito mais. Use Ctrl+N como atalho."
+      },
+      "quickCopy": {
+        "title": "⚡ Copiar Rapidamente",
+        "content": "Dê dois cliques rápidos em qualquer snippet para copiá-lo automaticamente para a área de transferência com feedback visual."
+      },
+      "folders": {
+        "title": "📁 Pastas",
+        "content": "Organize seus snippets em pastas para manter tudo organizado por contexto ou categoria. Você pode criar hierarquias de pastas."
+      },
+      "projects": {
+        "title": "🚀 Projetos",
+        "content": "Gerencie seus projetos e organize snippets por contexto de trabalho. Ideal para separar códigos de diferentes aplicações."
+      },
+      "search": {
+        "title": "🔍 Busca Inteligente",
+        "content": "Use a busca para encontrar snippets por título, conteúdo, tags ou linguagem. A busca é inteligente e em tempo real."
+      }
+    },
+    "doubleClickTip": {
+      "copyTitle": "⚡ Dica: Copiar com Duplo Clique",
+      "copyContent": "Parabéns pelo seu primeiro snippet! 🎉 Dica rápida: Dê dois cliques rápidos em qualquer snippet para copiá-lo automaticamente para a área de transferência.",
+      "organizeTitle": "📁 Dica: Organizar Snippets",
+      "organizeContent": "Clique com o botão direito do mouse em qualquer snippet para acessar opções de organização, como mover para pastas e projetos."
+    },
+    "joyride": {
+      "back": "← Anterior",
+      "close": "Fechar",
+      "lastDoubleClickTip": "Entendi! 👍",
+      "lastDefault": "Finalizar ✨",
+      "next": "Próximo →",
+      "skip": "Pular tutorial",
+      "open": "Abrir tutorial",
+      "stepCounter": "{{current}} de {{total}}"
+    }
+  },
+  "tutorialTrigger": {
+    "reviewTutorial": "📘 Revisar tutorial",
+    "reviewTutorialPlain": "Revisar tutorial"
+  },
+  "snippets": {
+    "copyOf": "Cópia de {{title}}"
+  }
+}

@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const http = require('http');
 const net = require('net');
 
-console.log('🚀 Iniciando Snippets App...\n');
+console.log('🚀 Iniciando Snippet Palace...\n');
 
 // Função para verificar se a porta está aberta
 function checkPort(port, timeout = 2000) {

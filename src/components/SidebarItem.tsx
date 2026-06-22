@@ -1,4 +1,5 @@
 import React, { memo, useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SidebarItem as SidebarItemType } from '../types/sidebar'
 import { useStore } from '../store/useStore'
@@ -24,6 +25,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onSelect,
   onToggle
 }) => {
+  const { t } = useTranslation()
   // Granular selectors — these are all stable action references, so a single
   // subscription per slice avoids re-renders on unrelated state changes.
   const setSelectedFolder = useStore(state => state.setSelectedFolder)
@@ -359,7 +361,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             onKeyDown={handleKeyDown}
             className="flex-1 text-sm font-medium bg-white dark:bg-gray-700 border border-blue-500 rounded px-1 py-0.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             onClick={(e) => e.stopPropagation()}
-            placeholder={isCreating ? (item.id === 'creating-folder' ? 'Nome da pasta...' : 'Nome do projeto...') : ''}
+            placeholder={isCreating ? (item.id === 'creating-folder' ? t('sidebar.folderNamePlaceholder') : t('sidebar.projectNamePlaceholder')) : ''}
           />
         ) : (
           <span className={clsx(

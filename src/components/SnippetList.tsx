@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { backdropVariants, modalVariants } from '../utils/motionVariants'
 import { useStore } from '../store/useStore'
@@ -14,6 +15,7 @@ const NewSnippetModal = lazy(() => import('./NewSnippetModal'))
 type SortOption = 'newest' | 'oldest' | 'favorites' | 'language' | 'mostUsed'
 
 const SnippetList: React.FC = () => {
+  const { t } = useTranslation()
   // Granular selectors — each subscribes only to the slice it needs
   const snippets = useStore(state => state.snippets)
   const selectedSnippet = useStore(state => state.selectedSnippet)
@@ -128,22 +130,22 @@ const SnippetList: React.FC = () => {
   const currentContextName = useMemo(() => {
     if (selectedFolderId) {
       const folder = folderById.get(selectedFolderId)
-      return folder ? `📁 ${folder.name}` : 'Pasta'
+      return folder ? `📁 ${folder.name}` : t('snippetList.folder')
     }
     if (selectedProjectId) {
       const project = projectById.get(selectedProjectId)
-      return project ? `🚀 ${project.name}` : 'Projeto'
+      return project ? `🚀 ${project.name}` : t('snippetList.project')
     }
-    if (selectedItem === 'favorites') return '❤️ Favoritos'
-    if (selectedItem === 'all-snippets') return '📄 Todos os Snippets'
-    if (selectedItem === 'unassigned') return '🕳️ Sem marcação'
+    if (selectedItem === 'favorites') return t('snippetList.favoritesContext')
+    if (selectedItem === 'all-snippets') return t('snippetList.allSnippets')
+    if (selectedItem === 'unassigned') return t('snippetList.unassignedContext')
     if (selectedItem?.startsWith('language-')) {
       const language = selectedItem.replace('language-', '')
       return `💻 ${language.charAt(0).toUpperCase() + language.slice(1)}`
     }
-    if (searchQuery) return `Resultados (${displaySnippets.length})`
-    return 'Snippets'
-  }, [selectedFolderId, selectedProjectId, selectedItem, searchQuery, displaySnippets.length, folderById, projectById])
+    if (searchQuery) return t('snippetList.searchResults', { count: displaySnippets.length })
+    return t('snippetList.snippetsLabel')
+  }, [selectedFolderId, selectedProjectId, selectedItem, searchQuery, displaySnippets.length, folderById, projectById, t])
 
   const contextMenuFolders = useMemo<ContextMenuFolder[]>(
     () => folders
@@ -241,11 +243,11 @@ const SnippetList: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
               </svg>
               <span>
-                {sortBy === 'newest' && 'Mais recentes'}
-                {sortBy === 'oldest' && 'Mais antigos'}
-                {sortBy === 'favorites' && 'Favoritos'}
-                {sortBy === 'language' && 'Por linguagem'}
-                {sortBy === 'mostUsed' && 'Mais usados'}
+                {sortBy === 'newest' && t('snippetList.sort.newest')}
+                {sortBy === 'oldest' && t('snippetList.sort.oldest')}
+                {sortBy === 'favorites' && t('snippetList.sort.favorites')}
+                {sortBy === 'language' && t('snippetList.sort.language')}
+                {sortBy === 'mostUsed' && t('snippetList.sort.mostUsed')}
               </span>
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -255,11 +257,11 @@ const SnippetList: React.FC = () => {
             {showSortDropdown && (
               <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10 dropdown-enter">
                 {[
-                  { value: 'newest', label: 'Mais recentes' },
-                  { value: 'oldest', label: 'Mais antigos' },
-                  { value: 'favorites', label: 'Favoritos' },
-                  { value: 'language', label: 'Por linguagem' },
-                  { value: 'mostUsed', label: 'Mais usados' }
+                  { value: 'newest', label: t('snippetList.sort.newest') },
+                  { value: 'oldest', label: t('snippetList.sort.oldest') },
+                  { value: 'favorites', label: t('snippetList.sort.favorites') },
+                  { value: 'language', label: t('snippetList.sort.language') },
+                  { value: 'mostUsed', label: t('snippetList.sort.mostUsed') }
                 ].map(option => (
                   <button
                     key={option.value}
@@ -288,13 +290,13 @@ const SnippetList: React.FC = () => {
         {displaySnippets.length === 0 ? (
           searchQuery ? (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              Nenhum resultado encontrado
+              {t('snippetList.noResults')}
             </div>
           ) : snippets.length === 0 ? (
             <EmptyState onCreateNew={() => setShowNewModal(true)} />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              Nenhum snippet na categoria selecionada
+              {t('snippetList.noSnippetsInCategory')}
             </div>
           )
         ) : (
@@ -356,10 +358,10 @@ const SnippetList: React.FC = () => {
               exit="exit"
             >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Excluir snippet
+                {t('snippetList.deleteSnippet')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Tem certeza que deseja excluir "{snippetToDelete?.title}"? Esta ação não pode ser desfeita.
+                {t('snippetList.deleteConfirmMessage', { title: snippetToDelete?.title })}
               </p>
               <div className="flex gap-3 justify-end">
                 <button
@@ -369,13 +371,13 @@ const SnippetList: React.FC = () => {
                   }}
                   className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 >
-                  Cancelar
+                  {t('snippetList.cancel')}
                 </button>
                 <button
                   onClick={confirmDirectDelete}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
-                  Excluir
+                  {t('snippetList.delete')}
                 </button>
               </div>
             </motion.div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FolderOpenIcon,
   ArrowPathIcon,
@@ -7,9 +8,10 @@ import {
   ExclamationCircleIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
+  LanguageIcon,
 } from '@heroicons/react/24/outline'
 import { useStore } from '../store/useStore'
-import { StorageInfo } from '../types'
+import { AppSettings, AppLanguage, StorageInfo } from '../types'
 
 interface Props {
   onClose: () => void
@@ -18,7 +20,9 @@ interface Props {
 type Status = { type: 'success' | 'error'; message: string } | null
 
 const SettingsPage: React.FC<Props> = ({ onClose }) => {
+  const { t, i18n } = useTranslation()
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [changing, setChanging] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -35,7 +39,56 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
 
   useEffect(() => {
     loadStorageInfo()
+    loadAppSettings()
   }, [])
+
+  async function loadAppSettings() {
+    if (!window.electronAPI?.settings?.getAppSettings) return
+    try {
+      const settings = await window.electronAPI.settings.getAppSettings()
+      setAppSettings(settings)
+    } catch {
+      // silent — section will just not render the toggles
+    }
+  }
+
+  async function handleToggleMinimizeToTray(value: boolean) {
+    if (!window.electronAPI?.settings || !appSettings) return
+    setAppSettings({ ...appSettings, minimizeToTray: value })
+    try {
+      await window.electronAPI.settings.setMinimizeToTray(value)
+    } catch {
+      setAppSettings(appSettings)
+      setStatus({ type: 'error', message: t('settings.tray.errorMinimize') })
+    }
+  }
+
+  async function handleToggleHotSnippets(value: boolean) {
+    if (!window.electronAPI?.settings || !appSettings) return
+    setAppSettings({ ...appSettings, hotSnippetsEnabled: value })
+    try {
+      await window.electronAPI.settings.setHotSnippetsEnabled(value)
+      if (!value) {
+        await window.electronAPI.tray.updateHotSnippets([])
+      } else {
+        const hot = store.snippets
+          .filter(s => s.isHot)
+          .slice(0, 10)
+          .map(s => ({ id: s.id, title: s.title, content: s.content }))
+        await window.electronAPI.tray.updateHotSnippets(hot)
+      }
+    } catch {
+      setAppSettings(appSettings)
+      setStatus({ type: 'error', message: t('settings.tray.errorHotSnippets') })
+    }
+  }
+
+  async function handleChangeLanguage(value: AppLanguage) {
+    if (!window.electronAPI?.settings || !appSettings) return
+    setAppSettings({ ...appSettings, language: value })
+    i18n.changeLanguage(value)
+    await window.electronAPI.settings.setLanguage(value)
+  }
 
   async function loadStorageInfo() {
     if (!window.electronAPI?.settings) {
@@ -46,7 +99,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
       const info = await window.electronAPI.settings.getStorageInfo()
       setStorageInfo(info)
     } catch {
-      setStatus({ type: 'error', message: 'Erro ao carregar informações de armazenamento.' })
+      setStatus({ type: 'error', message: t('settings.storage.errorLoadInfo') })
     } finally {
       setLoading(false)
     }
@@ -74,9 +127,9 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
 
       await window.electronAPI.settings.setStoragePath(selectedPath, currentData)
       await loadStorageInfo()
-      setStatus({ type: 'success', message: 'Local de armazenamento alterado com sucesso! Os dados foram migrados para a nova pasta.' })
+      setStatus({ type: 'success', message: t('settings.storage.successChangeFolder') })
     } catch {
-      setStatus({ type: 'error', message: 'Erro ao alterar o local de armazenamento.' })
+      setStatus({ type: 'error', message: t('settings.storage.errorChangeFolder') })
     } finally {
       setChanging(false)
     }
@@ -89,9 +142,9 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
     try {
       await window.electronAPI.settings.resetStoragePath()
       await loadStorageInfo()
-      setStatus({ type: 'success', message: 'Armazenamento restaurado para o local padrão.' })
+      setStatus({ type: 'success', message: t('settings.storage.successResetDefault') })
     } catch {
-      setStatus({ type: 'error', message: 'Erro ao restaurar o local padrão.' })
+      setStatus({ type: 'error', message: t('settings.storage.errorResetDefault') })
     } finally {
       setResetting(false)
     }
@@ -107,7 +160,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
       localStorage.removeItem('react-resizable-panels:snippets-layout-v2')
       window.location.reload()
     } catch {
-      setStatus({ type: 'error', message: 'Erro ao restaurar o layout.' })
+      setStatus({ type: 'error', message: t('settings.layout.errorReset') })
     }
   }
 
@@ -121,7 +174,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <Cog6ToothIcon className="h-6 w-6 text-blue-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configurações</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -137,19 +190,19 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
           {/* Storage section */}
           <section>
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-              Armazenamento
+              {t('settings.storage.heading')}
             </h3>
 
             {!isElectron && (
               <p className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3">
-                Configuração de armazenamento disponível apenas no aplicativo desktop.
+                {t('settings.storage.desktopOnly')}
               </p>
             )}
 
             {isElectron && loading && (
               <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
                 <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                <span className="text-sm">Carregando...</span>
+                <span className="text-sm">{t('common.loading')}</span>
               </div>
             )}
 
@@ -159,11 +212,11 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      {storageInfo.isCustomPath ? 'Local personalizado' : 'Local padrão'}
+                      {storageInfo.isCustomPath ? t('settings.storage.customPath') : t('settings.storage.defaultPath')}
                     </span>
                     {storageInfo.isCustomPath && (
                       <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
-                        Personalizado
+                        {t('settings.storage.customBadge')}
                       </span>
                     )}
                   </div>
@@ -175,12 +228,12 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                   </p>
                   {storageInfo.isCustomPath && (
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      Arquivo: <span className="font-mono">snippets-data.json</span>
+                      {t('settings.storage.fileLabel')} <span className="font-mono">snippets-data.json</span>
                     </p>
                   )}
                   {!storageInfo.isCustomPath && (
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      Dados salvos no armazenamento interno do aplicativo (localStorage).
+                      {t('settings.storage.localStorageNote')}
                     </p>
                   )}
                 </div>
@@ -192,7 +245,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
                   >
                     <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                    Abrir pasta
+                    {t('settings.storage.openFolder')}
                   </button>
 
                   <button
@@ -205,7 +258,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                     ) : (
                       <FolderOpenIcon className="h-4 w-4" />
                     )}
-                    {changing ? 'Alterando...' : 'Mudar local'}
+                    {changing ? t('settings.storage.changing') : t('settings.storage.changeFolder')}
                   </button>
 
                   {storageInfo.isCustomPath && (
@@ -219,35 +272,114 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
                       ) : (
                         <ArrowPathIcon className="h-4 w-4" />
                       )}
-                      {resetting ? 'Restaurando...' : 'Restaurar padrão'}
+                      {resetting ? t('settings.storage.restoring') : t('settings.storage.restoreDefault')}
                     </button>
                   )}
                 </div>
 
                 {/* Snippet count info */}
                 <p className="text-xs text-gray-400 dark:text-gray-500">
-                  {store.snippets.length} snippet{store.snippets.length !== 1 ? 's' : ''} armazenado{store.snippets.length !== 1 ? 's' : ''}.
-                  {' '}Ao mudar o local, todos os dados serão copiados para a nova pasta.
+                  {t('settings.storage.snippetCountInfo', { count: store.snippets.length })}
                 </p>
               </div>
             )}
           </section>
 
+          {/* Tray section */}
+          {isElectron && appSettings && (
+            <section>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+                {t('settings.tray.heading')}
+              </h3>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={appSettings.minimizeToTray}
+                    onChange={(e) => handleToggleMinimizeToTray(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 block">
+                      {t('settings.tray.minimizeLabel')}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('settings.tray.minimizeDescription')}
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={appSettings.hotSnippetsEnabled}
+                    onChange={(e) => handleToggleHotSnippets(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 block">
+                      {t('settings.tray.hotSnippetsLabel')}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('settings.tray.hotSnippetsDescription')}
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </section>
+          )}
+
+          {/* Language section */}
+          {isElectron && appSettings && (
+            <section>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+                {t('settings.language.heading')}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                {t('settings.language.description')}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleChangeLanguage('pt-BR')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors font-medium ${
+                    appSettings.language === 'pt-BR'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <LanguageIcon className="h-4 w-4" />
+                  {t('settings.language.portuguese')}
+                </button>
+                <button
+                  onClick={() => handleChangeLanguage('en')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors font-medium ${
+                    appSettings.language === 'en'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <LanguageIcon className="h-4 w-4" />
+                  {t('settings.language.english')}
+                </button>
+              </div>
+            </section>
+          )}
+
           {/* Layout section */}
           <section>
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-              Layout
+              {t('settings.layout.heading')}
             </h3>
             <div className="space-y-3">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Restaurar as larguras dos painéis (sidebar, lista e detalhe) para os valores padrão.
+                {t('settings.layout.description')}
               </p>
               <button
                 onClick={handleResetLayout}
                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
               >
                 <ArrowPathIcon className="h-4 w-4" />
-                Restaurar layout padrão
+                {t('settings.layout.resetButton')}
               </button>
             </div>
           </section>
@@ -275,7 +407,7 @@ const SettingsPage: React.FC<Props> = ({ onClose }) => {
             onClick={onClose}
             className="px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
           >
-            Fechar
+            {t('common.close')}
           </button>
         </div>
       </div>
